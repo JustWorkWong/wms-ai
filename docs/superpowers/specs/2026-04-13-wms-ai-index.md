@@ -10,6 +10,7 @@
 4. `2026-04-13-wms-ai-data-design.md`
 5. `2026-04-13-wms-ai-distributed-transactions.md`
 6. `2026-04-13-wms-ai-frontend-flow.md`
+7. `2026-04-13-wms-ai-operations-and-scheduling.md`
 
 ## 文档分工
 
@@ -25,6 +26,8 @@
   只讲 CAP 选型、事件清单、Outbox/Inbox、补偿和幂等
 - `2026-04-13-wms-ai-frontend-flow.md`
   只讲前端 ASCII 流程图、页面到接口映射、核心入参与出参
+- `2026-04-13-wms-ai-operations-and-scheduling.md`
+  只讲后台作业、定时任务、运行维护、补偿扫描和调度框架
 
 ## 当前状态
 
