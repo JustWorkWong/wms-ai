@@ -1,6 +1,6 @@
 # WMS AI 入库质检基础版 Implementation Plan
 
-> Status: Paused. This plan was written before the design was refined around `MAF`, `Aspire`, three databases, distributed transaction strategy, and split design documents. Do not execute this plan. Rewrite after the current design review passes.
+> Status: Paused and superseded by `2026-04-13-wms-ai-production-foundation.md`. This plan was written before the design was refined around `MAF`, `Aspire`, `Nacos`, `YARP`, `Hangfire`, three databases, distributed transaction strategy, and split design documents. Do not execute this plan.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 

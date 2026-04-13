@@ -21,6 +21,25 @@
 - 外键：`<entity>_id`
 - 时间：`*_at`
 - 状态：`status`
+- 乐观锁：`version`
+
+## 乐观锁基线
+
+所有表统一带：
+
+- `version bigint not null default 1`
+
+用途：
+
+- 作为 `EF Core` 并发令牌
+- 每次更新时递增
+- 防止并发覆盖
+
+说明：
+
+- 即使是 AI 运行态表，也统一保留 `version`，避免例外规则过多
+- 纯追加型日志表理论上很少更新，但为了评审和实现统一，第一期仍统一保留 `version`
+- 下方 ERD 为了可读性省略 `version` 列，实际建表必须补上
 
 ## 一、UserDb 详细设计
 

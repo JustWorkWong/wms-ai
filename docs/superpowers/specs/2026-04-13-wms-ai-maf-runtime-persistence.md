@@ -53,6 +53,17 @@
 - `ai_routing_policies`
 - `ai_prompt_assets`
 
+说明：
+
+- 第一期不强制新增独立 `ai_agents` 表
+- agent 定义优先通过：
+  - `workflow_name`
+  - `agent_profile_code`
+  - `prompt_asset_version`
+  - `tool_policy_json`
+  - `model_profile_code`
+  来识别和版本化
+
 ## 三、推荐表设计
 
 ## 1. `maf_sessions`
@@ -143,10 +154,15 @@
 
 - `id`
 - `workflow_name`
+- `agent_profile_code`
 - `status`
 - `requested_by`
+- `tenant_id`
+- `warehouse_id`
+- `membership_id`
 - `user_input`
 - `routing_json`
+- `execution_context_json`
 - `result_json`
 - `error_message`
 - `current_node`
@@ -166,6 +182,7 @@
 - `workflow_run_id`
 - `sequence`
 - `node_name`
+- `agent_profile_code`
 - `step_kind`
 - `status`
 - `attempt_count`
@@ -189,6 +206,10 @@
 - `session_id`
 - `workflow_run_id`
 - `workflow_step_run_id`
+- `tenant_id`
+- `warehouse_id`
+- `user_id`
+- `membership_id`
 - `call_type`
 - `tool_name`
 - `input_json`
@@ -215,6 +236,10 @@
 - `session_id`
 - `workflow_run_id`
 - `workflow_step_run_id`
+- `agent_profile_code`
+- `tenant_id`
+- `warehouse_id`
+- `user_id`
 - `provider_code`
 - `model_name`
 - `profile_code`
@@ -245,6 +270,10 @@
 - 失败轨迹和重试轨迹
 - prompt / skill 版本
 - 运行时模型配置快照
+- `agent_profile_code`
+- `tool_policy_json`
+- `execution_context_json`
+- 业务调用身份上下文
 
 ## 五、模型提供方信息
 
@@ -299,6 +328,14 @@
 - model call
 - checkpoint
 
+同时还要落：
+
+- `agent_profile_code`
+- `prompt_asset_version`
+- `model_profile_code`
+- `tool_policy_json`
+- 本次运行的 `execution_context_json`
+
 这样才能回答生产问题：
 
 - 这轮到底跑到了哪一步
@@ -306,8 +343,21 @@
 - 调了什么工具
 - 用了哪个模型
 - 能不能恢复
+- 当时是哪个 agent profile 在执行
+- 当时带着哪个租户/仓库/用户身份
 
-## 七、与 DDD 的关系
+## 七、多 Agent 设计建议
+
+第一期建议至少支持：
+
+- `evidence_gap_agent`
+- `inspection_decision_agent`
+
+它们不一定需要独立数据库表，但必须在运行态里可区分、可审计、可回放。
+
+如果后续需要平台可视化管理 agent 目录，再考虑新增独立 `ai_agent_profiles` 表。
+
+## 八、与 DDD 的关系
 
 `MAF` 的运行态属于 `AI Runtime Context` 的聚合，不属于 `Inbound Quality Context` 的业务真相。
 

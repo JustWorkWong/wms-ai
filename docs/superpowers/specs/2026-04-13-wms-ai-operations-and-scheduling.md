@@ -37,7 +37,7 @@
 
 第一期推荐：
 
-- `Quartz.NET`
+- `Hangfire`
 
 不推荐让简单 `BackgroundService` 承担全部调度职责。
 
@@ -158,19 +158,20 @@
 
 ## 多实例要求
 
-Quartz 必须按持久化模式部署，避免多实例重复执行。
+Hangfire 必须按持久化模式部署，避免多实例重复执行。
 
 要求：
 
 - 使用持久化 job store
-- 开启集群协调
+- 支持多实例 server 协调
 - 作业参数和执行历史可追踪
+- `Hangfire Dashboard` 受鉴权保护，只对研发/运维开放
 
 ## Aspire 集成要求
 
 `AppHost` 应把后台调度服务视为正式资源：
 
-- `Quartz` worker 或 hosted service
+- `Hangfire` server 或 hosted service
 - 与 `PostgreSQL`、`Redis`、`RabbitMQ` 一起被编排
 - 日志和 tracing 进入 `Aspire Dashboard`
 
