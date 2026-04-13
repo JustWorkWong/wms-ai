@@ -1,5 +1,7 @@
 # WMS AI 入库质检基础版 Implementation Plan
 
+> Status: Paused. This plan was written before the design was refined around `MAF`, `Aspire`, three databases, distributed transaction strategy, and split design documents. Do not execute this plan. Rewrite after the current design review passes.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 交付一个可运行的第一期系统，打通“平台账号与租户仓库 -> ASN/收货 -> 证据上传 -> AI 判定 -> 自动通过/人工复核 -> 正式结论落库”的黄金链路。
@@ -780,4 +782,3 @@ git commit -m "feat: add ag-ui stream observability and e2e smoke"
 - 平台作用域统一使用 `TenantId + WarehouseId`
 - AI 侧对象统一使用 `AiSession / AiCheckpoint / AiSummarySnapshot`
 - 业务结论统一落到 `QcDecision`
-
