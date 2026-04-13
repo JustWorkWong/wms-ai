@@ -9,6 +9,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WmsAi.ServiceDefaults", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WmsAi.Gateway.Host", "src\Gateway\WmsAi.Gateway.Host\WmsAi.Gateway.Host.csproj", "{72E4CF65-3F64-4A7B-8D16-1D6A4F7D84C2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WmsAi.Platform.Host", "src\Platform\WmsAi.Platform.Host\WmsAi.Platform.Host.csproj", "{7B8E1E45-8A71-4A8B-9D05-5D19E8C5B0B1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WmsAi.Inbound.Host", "src\Inbound\WmsAi.Inbound.Host\WmsAi.Inbound.Host.csproj", "{3C4A5B6C-9D7E-4E5F-A1B2-C3D4E5F60718}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WmsAi.AiGateway.Host", "src\AiGateway\WmsAi.AiGateway.Host\WmsAi.AiGateway.Host.csproj", "{2F3E4D5C-6B7A-4C8D-9E0F-1029384756A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WmsAi.Operations.Host", "src\Operations\WmsAi.Operations.Host\WmsAi.Operations.Host.csproj", "{1A2B3C4D-5E6F-4A7B-8C9D-0E1F2A3B4C5D}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WmsAi.ArchitectureTests", "tests\WmsAi.ArchitectureTests\WmsAi.ArchitectureTests.csproj", "{F3F2E5E4-5A4F-4A7B-BA88-7F8B5DBD5C7D}"
 EndProject
 Global
@@ -29,6 +37,22 @@ Global
 		{72E4CF65-3F64-4A7B-8D16-1D6A4F7D84C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{72E4CF65-3F64-4A7B-8D16-1D6A4F7D84C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{72E4CF65-3F64-4A7B-8D16-1D6A4F7D84C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B8E1E45-8A71-4A8B-9D05-5D19E8C5B0B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B8E1E45-8A71-4A8B-9D05-5D19E8C5B0B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B8E1E45-8A71-4A8B-9D05-5D19E8C5B0B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B8E1E45-8A71-4A8B-9D05-5D19E8C5B0B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C4A5B6C-9D7E-4E5F-A1B2-C3D4E5F60718}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C4A5B6C-9D7E-4E5F-A1B2-C3D4E5F60718}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C4A5B6C-9D7E-4E5F-A1B2-C3D4E5F60718}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C4A5B6C-9D7E-4E5F-A1B2-C3D4E5F60718}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F3E4D5C-6B7A-4C8D-9E0F-1029384756A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F3E4D5C-6B7A-4C8D-9E0F-1029384756A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F3E4D5C-6B7A-4C8D-9E0F-1029384756A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F3E4D5C-6B7A-4C8D-9E0F-1029384756A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A2B3C4D-5E6F-4A7B-8C9D-0E1F2A3B4C5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A2B3C4D-5E6F-4A7B-8C9D-0E1F2A3B4C5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A2B3C4D-5E6F-4A7B-8C9D-0E1F2A3B4C5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A2B3C4D-5E6F-4A7B-8C9D-0E1F2A3B4C5D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F3F2E5E4-5A4F-4A7B-BA88-7F8B5DBD5C7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F3F2E5E4-5A4F-4A7B-BA88-7F8B5DBD5C7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F3F2E5E4-5A4F-4A7B-BA88-7F8B5DBD5C7D}.Release|Any CPU.ActiveCfg = Release|Any CPU

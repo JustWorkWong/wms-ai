@@ -6,8 +6,4 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\ServiceDefaults\WmsAi.ServiceDefaults\WmsAi.ServiceDefaults.csproj" />
-  </ItemGroup>
-
 </Project>
