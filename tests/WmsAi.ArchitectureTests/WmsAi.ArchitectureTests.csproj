@@ -17,4 +17,9 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\BuildingBlocks\WmsAi.SharedKernel\WmsAi.SharedKernel.csproj" />
+    <ProjectReference Include="..\..\src\BuildingBlocks\WmsAi.Contracts\WmsAi.Contracts.csproj" />
+  </ItemGroup>
+
 </Project>
