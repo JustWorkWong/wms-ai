@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using WmsAi.Inbound.Application.Support;
 using WmsAi.Inbound.Host;
 using WmsAi.Inbound.Application.Inbound;
@@ -69,6 +70,6 @@ app.MapPost("/api/inbound/qc/decisions", async (
     return Results.Created($"/api/inbound/qc/decisions/{result.QcDecisionId}", result);
 });
 
-app.MapDefaultEndpoints();
+app.MapHealthChecks("/health", new HealthCheckOptions());
 
 app.Run();

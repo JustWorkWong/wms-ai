@@ -80,7 +80,14 @@ public sealed class FinalizeQcDecisionHandler(IBusinessDbContext businessDbConte
             receipt.MarkQcCompleted();
         }
 
-        await businessDbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await businessDbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception exception) when (InboundPersistenceExceptionTranslator.Translate(exception, "Qc decision already exists.") is InboundConflictException translated)
+        {
+            throw translated;
+        }
 
         return new FinalizeQcDecisionResult(decision.Id, qcTask.Status);
     }

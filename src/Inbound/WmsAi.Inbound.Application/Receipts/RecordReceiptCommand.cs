@@ -75,7 +75,14 @@ public sealed class RecordReceiptHandler(IBusinessDbContext businessDbContext)
 
         inboundNotice.MarkReceived();
 
-        await businessDbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await businessDbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception exception) when (InboundPersistenceExceptionTranslator.Translate(exception, "Receipt already exists.") is InboundConflictException translated)
+        {
+            throw translated;
+        }
 
         return new RecordReceiptResult(receipt.Id, index);
     }

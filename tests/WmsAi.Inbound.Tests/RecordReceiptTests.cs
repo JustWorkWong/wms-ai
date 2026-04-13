@@ -169,6 +169,36 @@ public class RecordReceiptTests
         await act.Should().ThrowAsync<InboundValidationException>();
     }
 
+    [Fact]
+    public async Task Create_inbound_notice_should_reject_duplicate_notice_no()
+    {
+        await using var database = new SqliteConnection("DataSource=:memory:");
+        await database.OpenAsync();
+
+        var options = new DbContextOptionsBuilder<BusinessDbContext>()
+            .UseSqlite(database)
+            .Options;
+
+        await using var dbContext = new BusinessDbContext(options);
+        await dbContext.Database.EnsureCreatedAsync();
+
+        var handler = new CreateInboundNoticeHandler(dbContext);
+
+        await handler.Handle(new CreateInboundNoticeCommand(
+            "tenant-demo",
+            "wh-sz-01",
+            "ASN_DUP_001",
+            [new InboundNoticeLineInput("sku-001", 10m)]));
+
+        var act = async () => await handler.Handle(new CreateInboundNoticeCommand(
+            "tenant-demo",
+            "wh-sz-01",
+            "ASN_DUP_001",
+            [new InboundNoticeLineInput("sku-002", 12m)]));
+
+        await act.Should().ThrowAsync<InboundConflictException>();
+    }
+
     [Theory]
     [InlineData(typeof(InboundNotFoundException), 404)]
     [InlineData(typeof(InboundConflictException), 409)]

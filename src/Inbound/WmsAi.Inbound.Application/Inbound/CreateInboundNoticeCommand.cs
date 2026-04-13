@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using WmsAi.Inbound.Application.Support;
 using WmsAi.Inbound.Application.Abstractions;
 using WmsAi.Inbound.Domain.Inbound;
 
@@ -24,7 +26,14 @@ public sealed class CreateInboundNoticeHandler(IBusinessDbContext businessDbCont
             command.Lines);
 
         businessDbContext.InboundNotices.Add(inboundNotice);
-        await businessDbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await businessDbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception exception) when (InboundPersistenceExceptionTranslator.Translate(exception, "Inbound notice already exists.") is InboundConflictException translated)
+        {
+            throw translated;
+        }
 
         return new CreateInboundNoticeResult(inboundNotice.Id, inboundNotice.NoticeNo);
     }
