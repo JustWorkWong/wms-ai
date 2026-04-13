@@ -8,7 +8,7 @@
 
 **Architecture:** 保持 `Gateway + Platform Core + Inbound QC Core + AI Gateway` 四层边界。普通业务流量经网关直达业务服务，AI 会话与 `AG-UI` 流量统一经 `AI Gateway`，会话热状态进 `Redis`，checkpoint 和业务真相进 `PostgreSQL`，证据文件进对象存储。
 
-**Tech Stack:** `.NET 9`, `ASP.NET Core`, `EF Core`, `PostgreSQL`, `Redis`, `RabbitMQ`, `MinIO(S3)`, `YARP`, `OpenTelemetry`, `Vue 3`, `Vite`, `TypeScript`, `Vitest`, `Playwright`, `@ag-ui/client`, `@ag-ui/core`
+**Tech Stack:** `.NET 10`, `ASP.NET Core`, `EF Core`, `PostgreSQL`, `Redis`, `RabbitMQ`, `MinIO(S3)`, `YARP`, `OpenTelemetry`, `Vue 3`, `Vite`, `TypeScript`, `Vitest`, `Playwright`, `@ag-ui/client`, `@ag-ui/core`
 
 ---
 
@@ -100,7 +100,7 @@ Expected: FAIL，提示缺少项目文件和 `docker-compose.yml`
 <!-- Directory.Build.props -->
 <Project>
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>

@@ -6,7 +6,7 @@
 
 **Architecture:** 系统按 `Gateway + Platform + Inbound + AiGateway + Operations + Vue` 组织，开发期通过 `Aspire AppHost` 编排，网关使用 `YARP`，跨库一致性使用 `CAP + RabbitMQ`，后台作业使用 `Hangfire`，配置中心使用 `Nacos`，业务与 AI 的正式状态分别落到 `UserDb / BusinessDb / AiDb`。AI 侧采用 `MAF Workflow + EvidenceGapAgent + InspectionDecisionAgent`，前端只通过 `AiGateway` 使用 `AG-UI`。
 
-**Tech Stack:** `.NET 9`, `ASP.NET Core`, `Aspire`, `EF Core`, `PostgreSQL`, `Redis`, `RabbitMQ`, `MinIO`, `YARP`, `Nacos SDK`, `CAP`, `Hangfire`, `OpenTelemetry`, `Vue 3`, `Vite`, `TypeScript`, `Pinia`, `Vue Router`, `Vitest`, `Playwright`, `@ag-ui/client`
+**Tech Stack:** `.NET 10`, `ASP.NET Core`, `Aspire`, `EF Core`, `PostgreSQL`, `Redis`, `RabbitMQ`, `MinIO`, `YARP`, `Nacos SDK`, `CAP`, `Hangfire`, `OpenTelemetry`, `Vue 3`, `Vite`, `TypeScript`, `Pinia`, `Vue Router`, `Vitest`, `Playwright`, `@ag-ui/client`
 
 ---
 
@@ -101,7 +101,7 @@ Expected: FAIL，提示缺少 `AppHost`、`ServiceDefaults`、`Gateway`、前端
 <!-- /Users/tengfengsu/wfcodes/wms-ai/Directory.Build.props -->
 <Project>
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
