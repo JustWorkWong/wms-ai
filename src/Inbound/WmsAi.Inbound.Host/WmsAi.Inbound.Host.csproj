@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\WmsAi.Inbound.Application\WmsAi.Inbound.Application.csproj" />
+    <ProjectReference Include="..\WmsAi.Inbound.Infrastructure\WmsAi.Inbound.Infrastructure.csproj" />
     <ProjectReference Include="..\..\ServiceDefaults\WmsAi.ServiceDefaults\WmsAi.ServiceDefaults.csproj" />
   </ItemGroup>
 
