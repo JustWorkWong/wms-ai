@@ -9,6 +9,7 @@ public abstract class WarehouseScopedAggregateRoot : TenantScopedAggregateRoot
     protected WarehouseScopedAggregateRoot(string tenantId, string warehouseId)
         : base(tenantId)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(warehouseId);
         WarehouseId = warehouseId;
     }
 

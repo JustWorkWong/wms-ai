@@ -8,6 +8,7 @@ public abstract class TenantScopedAggregateRoot : AggregateRoot
 
     protected TenantScopedAggregateRoot(string tenantId)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
         TenantId = tenantId;
     }
 
