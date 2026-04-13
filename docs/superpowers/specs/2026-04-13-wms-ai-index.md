@@ -8,6 +8,8 @@
 2. `2026-04-13-wms-ai-technical-options.md`
 3. `2026-04-13-wms-ai-architecture.md`
 4. `2026-04-13-wms-ai-data-design.md`
+5. `2026-04-13-wms-ai-distributed-transactions.md`
+6. `2026-04-13-wms-ai-frontend-flow.md`
 
 ## 文档分工
 
@@ -19,6 +21,10 @@
   只讲服务拆分、MAF workflow、Skill/MCP/Function Calling 配合、部署与观测
 - `2026-04-13-wms-ai-data-design.md`
   只讲三库拆分、核心表设计、模型配置入库、初始化示例数据
+- `2026-04-13-wms-ai-distributed-transactions.md`
+  只讲 CAP 选型、事件清单、Outbox/Inbox、补偿和幂等
+- `2026-04-13-wms-ai-frontend-flow.md`
+  只讲前端 ASCII 流程图、页面到接口映射、核心入参与出参
 
 ## 当前状态
 

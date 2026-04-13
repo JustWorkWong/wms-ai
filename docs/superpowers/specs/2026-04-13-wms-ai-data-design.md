@@ -12,6 +12,69 @@
 
 - `MinIO / S3`
 
+## 命名规范
+
+数据库对象统一使用 `snake_case`，避免混用驼峰、缩写和大小写引用。
+
+### 表名
+
+- 使用复数名词
+- 使用完整业务语义
+
+示例：
+
+- `inbound_notices`
+- `receipt_lines`
+- `qc_tasks`
+- `ai_model_profiles`
+
+避免：
+
+- `InboundNotice`
+- `QcTaskTbl`
+- `sku_qp`
+
+### 列名
+
+- 主键统一：`id`
+- 外键统一：`<entity>_id`
+- 时间统一：`*_at`
+- 状态统一：`status`
+- 布尔统一：`is_*` 或 `has_*`
+
+示例：
+
+- `tenant_id`
+- `warehouse_id`
+- `created_at`
+- `updated_at`
+- `is_active`
+
+### 索引与约束命名
+
+- 主键：`pk_<table>`
+- 外键：`fk_<table>__<ref_table>`
+- 唯一约束：`uk_<table>__<col1>__<col2>`
+- 普通索引：`ix_<table>__<col1>__<col2>`
+
+示例：
+
+- `pk_qc_tasks`
+- `fk_qc_tasks__qc_plans`
+- `uk_warehouses__tenant_id__code`
+- `ix_ai_sessions__tenant_id__business_object_id`
+
+### 枚举与状态字段
+
+第一期优先用稳定的字符串代码，不在数据库层大量使用数据库私有 enum 类型。
+
+示例：
+
+- `status = 'pending_manual_review'`
+- `decision_source = 'ai_auto_pass'`
+
+这样更利于跨环境迁移和后续事件载荷对齐。
+
 ## 一、UserDb
 
 ## 1. 作用

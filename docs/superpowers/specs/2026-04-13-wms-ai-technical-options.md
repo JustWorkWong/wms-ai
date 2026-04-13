@@ -150,7 +150,7 @@
 - 云原生环境下成本高
 - 对队列、缓存、对象存储并不友好
 
-### 方案 B: 本地事务 + Outbox/Inbox + Saga/补偿
+### 方案 B: 使用成熟开源框架实现 `Outbox/Inbox + Saga/补偿`
 
 优点：
 
@@ -164,7 +164,22 @@
 
 ### 推荐
 
-选 `方案 B`。
+选 `方案 B`，并明确落到 `CAP`，不自研事件总线或 Outbox 框架。
+
+### 分布式事务框架选型
+
+本项目分布式事务采用：
+
+- `CAP`
+- `RabbitMQ`
+- `EF Core`
+
+原因：
+
+- `CAP` 本身就是为事件总线和分布式事务问题设计
+- 能与 `EF Core` 事务配合
+- 更贴近当前 `.NET + PostgreSQL + RabbitMQ` 方案
+- 比自己手写 `Outbox publisher / Inbox consumer / retry scheduler` 更稳
 
 ### 分布式事务策略
 
@@ -172,8 +187,7 @@
 - 业务服务写 `BusinessDb` 时，只保证本地事务
 - AI 服务写 `AiDb` 时，只保证本地事务
 - 跨库同步靠：
-  - `Outbox`
-  - `Inbox`
+  - `CAP` 管理的消息持久化
   - 业务事件
   - Saga / 补偿
 
