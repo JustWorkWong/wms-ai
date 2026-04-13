@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WmsAi.Inbound.Application.Abstractions;
+using WmsAi.Inbound.Application.Support;
 using WmsAi.Inbound.Domain.Qc;
 
 namespace WmsAi.Inbound.Application.Qc;
@@ -36,18 +37,33 @@ public sealed class FinalizeQcDecisionHandler(IBusinessDbContext businessDbConte
 
         if (qcTask is null)
         {
-            throw new InvalidOperationException("Qc task was not found.");
+            throw new InboundNotFoundException("Qc task was not found.");
         }
 
-        var decision = new QcDecision(
-            command.TenantId,
-            command.WarehouseId,
-            qcTask.Id,
-            command.DecisionStatus,
-            command.DecisionSource,
-            command.ReasonSummary);
+        QcDecision decision;
+        try
+        {
+            decision = new QcDecision(
+                command.TenantId,
+                command.WarehouseId,
+                qcTask.Id,
+                command.DecisionStatus,
+                command.DecisionSource,
+                command.ReasonSummary);
+        }
+        catch (ArgumentException exception)
+        {
+            throw new InboundValidationException(exception.Message);
+        }
 
-        qcTask.Finalize(decision.Id, decision.DecisionStatus);
+        try
+        {
+            qcTask.Finalize(decision.Id, decision.DecisionStatus);
+        }
+        catch (InvalidOperationException exception)
+        {
+            throw new InboundConflictException(exception.Message);
+        }
         businessDbContext.QcDecisions.Add(decision);
 
         var receipt = await businessDbContext.Receipts

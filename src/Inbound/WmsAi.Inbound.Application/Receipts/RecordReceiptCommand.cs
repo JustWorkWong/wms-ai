@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WmsAi.Inbound.Application.Abstractions;
+using WmsAi.Inbound.Application.Support;
 using WmsAi.Inbound.Domain.Qc;
 using WmsAi.Inbound.Domain.Receipts;
 
@@ -29,20 +30,38 @@ public sealed class RecordReceiptHandler(IBusinessDbContext businessDbContext)
 
         if (inboundNotice is null)
         {
-            throw new InvalidOperationException("Inbound notice was not found.");
+            throw new InboundNotFoundException("Inbound notice was not found.");
         }
 
-        var receipt = new Receipt(
-            command.TenantId,
-            command.WarehouseId,
-            command.InboundNoticeId,
-            command.ReceiptNo,
-            command.Lines);
+        if (command.Lines.Count == 0)
+        {
+            throw new InboundValidationException("At least one receipt line is required.");
+        }
+
+        if (command.Lines.Any(line => line.ReceivedQuantity <= 0))
+        {
+            throw new InboundValidationException("Receipt lines must have positive quantity.");
+        }
+
+        Receipt receipt;
+        try
+        {
+            receipt = new Receipt(
+                command.TenantId,
+                command.WarehouseId,
+                command.InboundNoticeId,
+                command.ReceiptNo,
+                command.Lines);
+        }
+        catch (ArgumentException exception)
+        {
+            throw new InboundValidationException(exception.Message);
+        }
 
         businessDbContext.Receipts.Add(receipt);
 
         var index = 0;
-        foreach (var line in receipt.Lines.Where(line => line.ReceivedQuantity > 0))
+        foreach (var line in receipt.Lines)
         {
             index++;
             businessDbContext.QcTasks.Add(new QcTask(

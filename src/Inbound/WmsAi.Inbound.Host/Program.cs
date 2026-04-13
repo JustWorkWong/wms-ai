@@ -1,4 +1,5 @@
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using WmsAi.Inbound.Application.Support;
+using WmsAi.Inbound.Host;
 using WmsAi.Inbound.Application.Inbound;
 using WmsAi.Inbound.Application.Qc;
 using WmsAi.Inbound.Application.Receipts;
@@ -12,6 +13,24 @@ builder.Services.AddInboundModule(builder.Configuration);
 var app = builder.Build();
 
 await BusinessDatabaseInitializer.InitializeAsync(app.Services);
+
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (Exception exception) when (exception is InboundException or ArgumentException)
+    {
+        var error = InboundHttpExceptionMapper.Map(exception);
+        context.Response.StatusCode = error.StatusCode;
+        await context.Response.WriteAsJsonAsync(new
+        {
+            title = error.Title,
+            detail = error.Detail
+        });
+    }
+});
 
 app.MapPost("/api/inbound/notices", async (
     CreateInboundNoticeCommand command,
@@ -50,7 +69,6 @@ app.MapPost("/api/inbound/qc/decisions", async (
     return Results.Created($"/api/inbound/qc/decisions/{result.QcDecisionId}", result);
 });
 
-app.MapHealthChecks("/health", new HealthCheckOptions());
 app.MapDefaultEndpoints();
 
 app.Run();

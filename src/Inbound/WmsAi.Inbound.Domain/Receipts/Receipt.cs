@@ -62,7 +62,7 @@ public sealed class ReceiptLine
     internal ReceiptLine(string skuCode, decimal receivedQuantity)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(skuCode);
-        ArgumentOutOfRangeException.ThrowIfNegative(receivedQuantity);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(receivedQuantity);
 
         Id = Guid.NewGuid();
         SkuCode = skuCode.Trim();

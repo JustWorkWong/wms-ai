@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Inbound\WmsAi.Inbound.Application\WmsAi.Inbound.Application.csproj" />
+    <ProjectReference Include="..\..\src\Inbound\WmsAi.Inbound.Host\WmsAi.Inbound.Host.csproj" />
     <ProjectReference Include="..\..\src\Inbound\WmsAi.Inbound.Infrastructure\WmsAi.Inbound.Infrastructure.csproj" />
   </ItemGroup>
 

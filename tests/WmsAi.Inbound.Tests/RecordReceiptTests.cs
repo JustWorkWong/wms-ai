@@ -6,8 +6,10 @@ using Microsoft.Extensions.DependencyInjection;
 using WmsAi.Inbound.Application.Inbound;
 using WmsAi.Inbound.Application.Qc;
 using WmsAi.Inbound.Application.Receipts;
+using WmsAi.Inbound.Application.Support;
 using WmsAi.Inbound.Domain.Inbound;
 using WmsAi.Inbound.Domain.Receipts;
+using WmsAi.Inbound.Host;
 using WmsAi.Inbound.Infrastructure.Persistence;
 using Xunit;
 
@@ -95,7 +97,7 @@ public class RecordReceiptTests
             "reviewer",
             "Manual override"));
 
-        await act.Should().ThrowAsync<InvalidOperationException>();
+        await act.Should().ThrowAsync<InboundConflictException>();
     }
 
     [Fact]
@@ -134,5 +136,60 @@ public class RecordReceiptTests
                 File.Delete(databasePath);
             }
         }
+    }
+
+    [Fact]
+    public async Task Record_receipt_should_reject_zero_quantity_line()
+    {
+        await using var database = new SqliteConnection("DataSource=:memory:");
+        await database.OpenAsync();
+
+        var options = new DbContextOptionsBuilder<BusinessDbContext>()
+            .UseSqlite(database)
+            .Options;
+
+        await using var dbContext = new BusinessDbContext(options);
+        await dbContext.Database.EnsureCreatedAsync();
+
+        var createInboundNoticeHandler = new CreateInboundNoticeHandler(dbContext);
+        var notice = await createInboundNoticeHandler.Handle(new CreateInboundNoticeCommand(
+            "tenant-demo",
+            "wh-sz-01",
+            "ASN_DEMO_003",
+            [new InboundNoticeLineInput("sku-001", 10m)]));
+
+        var handler = new RecordReceiptHandler(dbContext);
+        var act = async () => await handler.Handle(new RecordReceiptCommand(
+            "tenant-demo",
+            "wh-sz-01",
+            notice.InboundNoticeId,
+            "RCV_DEMO_003",
+            [new ReceiptLineInput("sku-001", 0m)]));
+
+        await act.Should().ThrowAsync<InboundValidationException>();
+    }
+
+    [Theory]
+    [InlineData(typeof(InboundNotFoundException), 404)]
+    [InlineData(typeof(InboundConflictException), 409)]
+    [InlineData(typeof(InboundInvalidStateException), 409)]
+    [InlineData(typeof(InboundValidationException), 400)]
+    [InlineData(typeof(ArgumentException), 400)]
+    [InlineData(typeof(InvalidOperationException), 500)]
+    public void Map_business_exception_should_return_expected_status(Type exceptionType, int statusCode)
+    {
+        Exception exception = exceptionType.Name switch
+        {
+            nameof(InboundNotFoundException) => new InboundNotFoundException("missing"),
+            nameof(InboundConflictException) => new InboundConflictException("conflict"),
+            nameof(InboundInvalidStateException) => new InboundInvalidStateException("invalid"),
+            nameof(InboundValidationException) => new InboundValidationException("bad request"),
+            nameof(ArgumentException) => new ArgumentException("arg"),
+            _ => new InvalidOperationException("boom")
+        };
+
+        var result = InboundHttpExceptionMapper.Map(exception);
+
+        result.StatusCode.Should().Be(statusCode);
     }
 }
