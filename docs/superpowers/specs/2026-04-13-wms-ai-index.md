@@ -13,6 +13,9 @@
 7. `2026-04-13-wms-ai-operations-and-scheduling.md`
 8. `2026-04-13-wms-ai-database-detailed-design.md`
 9. `2026-04-13-wms-ai-contracts.md`
+10. `2026-04-13-wms-ai-ddd-domain-design.md`
+11. `2026-04-13-wms-ai-maf-runtime-persistence.md`
+12. `2026-04-13-wms-ai-frontend-pages.md`
 
 ## 文档分工
 
@@ -34,6 +37,12 @@
   只讲 ERD、PK/FK/UK、索引、删除策略、迁移顺序
 - `2026-04-13-wms-ai-contracts.md`
   只讲 HTTP API、AG-UI/SSE、事件载荷、错误码、状态机和权限矩阵
+- `2026-04-13-wms-ai-ddd-domain-design.md`
+  只讲 bounded context、aggregate root、repository、领域服务、不变量
+- `2026-04-13-wms-ai-maf-runtime-persistence.md`
+  只讲 MAF 的 session/message/workflow/checkpoint/tool/api 调用如何落库
+- `2026-04-13-wms-ai-frontend-pages.md`
+  只讲前端页面矩阵、页面功能、组件与每个功能的接口输入输出
 
 ## 当前状态
 

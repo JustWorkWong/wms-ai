@@ -285,9 +285,14 @@
 - 模型配置
 - 路由策略
 
+物理表命名建议与 `MAF` 运行时保持一致：
+
+- 运行时表优先用 `maf_*`
+- 项目级 AI 配置与结果表使用 `ai_*`
+
 ## 2. 建议核心表
 
-### `ai_sessions`
+### `maf_sessions`
 
 - `id`
 - `tenant_id`
@@ -298,7 +303,7 @@
 - `status`
 - `last_checkpoint_id`
 
-### `ai_checkpoints`
+### `maf_checkpoints`
 
 - `id`
 - `session_id`
@@ -309,7 +314,7 @@
 - `cursor`
 - `created_at`
 
-### `ai_summary_snapshots`
+### `maf_summary_snapshots`
 
 - `id`
 - `session_id`
@@ -343,8 +348,10 @@
 - `id`
 - `provider_code`
 - `provider_name`
-- `base_url`
+- `api_base_url`
+- `api_version`
 - `auth_mode`
+- `credential_ref`
 - `status`
 
 ### `ai_model_profiles`

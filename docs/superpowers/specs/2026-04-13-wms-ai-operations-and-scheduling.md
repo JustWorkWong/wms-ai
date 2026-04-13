@@ -174,6 +174,27 @@ Quartz 必须按持久化模式部署，避免多实例重复执行。
 - 与 `PostgreSQL`、`Redis`、`RabbitMQ` 一起被编排
 - 日志和 tracing 进入 `Aspire Dashboard`
 
+## 启动迁移与种子数据策略
+
+系统启动时默认执行：
+
+- `EF Core` 迁移
+- 种子数据导入
+
+但必须提供开关。
+
+建议开关：
+
+- `Bootstrap:ApplyMigrationsOnStartup = true`
+- `Bootstrap:ApplySeedDataOnStartup = true`
+
+要求：
+
+- 默认 `true`
+- 生产环境可显式关闭
+- 执行结果写日志并上报到 `Aspire Dashboard`
+- 导入器必须幂等，重复启动不会产生脏数据
+
 ## 评审结论
 
 评审时必须讲清楚：
