@@ -25,7 +25,7 @@ public sealed class CreateTenantHandler(IPlatformUserDbContext userDbContext)
         var tenant = new Tenant(command.TenantCode, command.TenantName);
         var warehouse = tenant.AddDefaultWarehouse(command.DefaultWarehouseCode, command.DefaultWarehouseName);
         var user = new User(command.AdminLoginName);
-        var membership = new Membership(tenant.Code, warehouse.Code, user.LoginName, "owner");
+        var membership = new Membership(tenant.Id, warehouse.Id, user.Id, "owner");
 
         await userDbContext.AddTenantAsync(tenant, cancellationToken);
         await userDbContext.AddWarehouseAsync(warehouse, cancellationToken);

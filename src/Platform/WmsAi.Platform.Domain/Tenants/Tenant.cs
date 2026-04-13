@@ -30,8 +30,14 @@ public sealed class Tenant : AggregateRoot
 
     public Warehouse AddDefaultWarehouse(string warehouseCode, string warehouseName)
     {
-        var warehouse = new Warehouse(Code, warehouseCode, warehouseName, true);
+        var warehouse = new Warehouse(Id, warehouseCode, warehouseName, true);
         _warehouses.Add(warehouse);
         return warehouse;
+    }
+
+    public void Rename(string name)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        Name = name.Trim();
     }
 }

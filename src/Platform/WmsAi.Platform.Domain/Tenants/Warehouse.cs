@@ -2,22 +2,25 @@ using WmsAi.SharedKernel.Domain;
 
 namespace WmsAi.Platform.Domain.Tenants;
 
-public sealed class Warehouse : TenantScopedAggregateRoot
+public sealed class Warehouse : AggregateRoot
 {
     private Warehouse()
     {
     }
 
-    public Warehouse(string tenantId, string code, string name, bool isDefault)
-        : base(tenantId)
+    public Warehouse(Guid tenantId, string code, string name, bool isDefault)
     {
+        ArgumentOutOfRangeException.ThrowIfEqual(tenantId, Guid.Empty);
         ArgumentException.ThrowIfNullOrWhiteSpace(code);
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
+        TenantId = tenantId;
         Code = code.Trim();
         Name = name.Trim();
         IsDefault = isDefault;
     }
+
+    public Guid TenantId { get; private set; }
 
     public string Code { get; private set; } = string.Empty;
 

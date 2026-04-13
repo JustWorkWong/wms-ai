@@ -2,24 +2,31 @@ using WmsAi.SharedKernel.Domain;
 
 namespace WmsAi.Platform.Domain.Users;
 
-public sealed class Membership : WarehouseScopedAggregateRoot
+public sealed class Membership : AggregateRoot
 {
     private Membership()
     {
     }
 
-    public Membership(string tenantId, string warehouseId, string userId, string role)
-        : base(tenantId, warehouseId)
+    public Membership(Guid tenantId, Guid warehouseId, Guid userId, string role)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
+        ArgumentOutOfRangeException.ThrowIfEqual(tenantId, Guid.Empty);
+        ArgumentOutOfRangeException.ThrowIfEqual(warehouseId, Guid.Empty);
+        ArgumentOutOfRangeException.ThrowIfEqual(userId, Guid.Empty);
         ArgumentException.ThrowIfNullOrWhiteSpace(role);
 
-        UserId = userId.Trim();
+        TenantId = tenantId;
+        WarehouseId = warehouseId;
+        UserId = userId;
         Role = role.Trim();
         Status = "active";
     }
 
-    public string UserId { get; private set; } = string.Empty;
+    public Guid TenantId { get; private set; }
+
+    public Guid WarehouseId { get; private set; }
+
+    public Guid UserId { get; private set; }
 
     public string Role { get; private set; } = string.Empty;
 

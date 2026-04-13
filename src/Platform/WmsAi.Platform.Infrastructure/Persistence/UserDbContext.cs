@@ -60,10 +60,14 @@ public sealed class UserDbContext(DbContextOptions<UserDbContext> options) : DbC
         {
             builder.ToTable("warehouses");
             builder.HasKey(entity => entity.Id);
-            builder.Property(entity => entity.TenantId).HasMaxLength(64);
+            builder.Property(entity => entity.TenantId);
             builder.Property(entity => entity.Code).HasMaxLength(64);
             builder.Property(entity => entity.Name).HasMaxLength(256);
             builder.HasIndex(entity => new { entity.TenantId, entity.Code }).IsUnique();
+            builder.HasOne<Tenant>()
+                .WithMany(entity => entity.Warehouses)
+                .HasForeignKey(entity => entity.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
             VersionedEntityTypeConfiguration.ApplyVersion(builder);
         });
 
@@ -81,12 +85,24 @@ public sealed class UserDbContext(DbContextOptions<UserDbContext> options) : DbC
         {
             builder.ToTable("memberships");
             builder.HasKey(entity => entity.Id);
-            builder.Property(entity => entity.TenantId).HasMaxLength(64);
-            builder.Property(entity => entity.WarehouseId).HasMaxLength(64);
-            builder.Property(entity => entity.UserId).HasMaxLength(128);
+            builder.Property(entity => entity.TenantId);
+            builder.Property(entity => entity.WarehouseId);
+            builder.Property(entity => entity.UserId);
             builder.Property(entity => entity.Role).HasMaxLength(64);
             builder.Property(entity => entity.Status).HasMaxLength(32);
             builder.HasIndex(entity => new { entity.TenantId, entity.WarehouseId, entity.UserId }).IsUnique();
+            builder.HasOne<Tenant>()
+                .WithMany()
+                .HasForeignKey(entity => entity.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<Warehouse>()
+                .WithMany()
+                .HasForeignKey(entity => entity.WarehouseId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(entity => entity.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
             VersionedEntityTypeConfiguration.ApplyVersion(builder);
         });
     }
@@ -99,10 +115,25 @@ public static class PlatformModuleExtensions
         var connectionString = configuration.GetConnectionString("UserDb")
             ?? "Data Source=wmsai-platform-user.db";
 
-        services.AddDbContext<UserDbContext>(options => options.UseSqlite(connectionString));
+        services.AddSingleton<VersionedEntitySaveChangesInterceptor>();
+        services.AddDbContext<UserDbContext>((serviceProvider, options) =>
+        {
+            options.UseSqlite(connectionString);
+            options.AddInterceptors(serviceProvider.GetRequiredService<VersionedEntitySaveChangesInterceptor>());
+        });
         services.AddScoped<IPlatformUserDbContext>(serviceProvider => serviceProvider.GetRequiredService<UserDbContext>());
         services.AddScoped<CreateTenantHandler>();
 
         return services;
+    }
+}
+
+public static class PlatformDatabaseInitializer
+{
+    public static async Task InitializeAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+    {
+        await using var scope = serviceProvider.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<UserDbContext>();
+        await dbContext.Database.EnsureCreatedAsync(cancellationToken);
     }
 }

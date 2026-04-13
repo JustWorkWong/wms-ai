@@ -9,6 +9,8 @@ builder.Services.AddPlatformModule(builder.Configuration);
 
 var app = builder.Build();
 
+await PlatformDatabaseInitializer.InitializeAsync(app.Services);
+
 app.MapPost("/api/platform/tenants", async (
     CreateTenantCommand command,
     CreateTenantHandler handler,
