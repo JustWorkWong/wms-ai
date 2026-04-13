@@ -11,6 +11,8 @@
 5. `2026-04-13-wms-ai-distributed-transactions.md`
 6. `2026-04-13-wms-ai-frontend-flow.md`
 7. `2026-04-13-wms-ai-operations-and-scheduling.md`
+8. `2026-04-13-wms-ai-database-detailed-design.md`
+9. `2026-04-13-wms-ai-contracts.md`
 
 ## 文档分工
 
@@ -28,6 +30,10 @@
   只讲前端 ASCII 流程图、页面到接口映射、核心入参与出参
 - `2026-04-13-wms-ai-operations-and-scheduling.md`
   只讲后台作业、定时任务、运行维护、补偿扫描和调度框架
+- `2026-04-13-wms-ai-database-detailed-design.md`
+  只讲 ERD、PK/FK/UK、索引、删除策略、迁移顺序
+- `2026-04-13-wms-ai-contracts.md`
+  只讲 HTTP API、AG-UI/SSE、事件载荷、错误码、状态机和权限矩阵
 
 ## 当前状态
 
