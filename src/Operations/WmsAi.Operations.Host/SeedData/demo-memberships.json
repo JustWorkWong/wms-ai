@@ -1,0 +1,18 @@
+[
+  {
+    "id": "membership-admin-001",
+    "tenantId": "tenant-demo-001",
+    "warehouseId": "warehouse-sz-001",
+    "userId": "user-admin-demo",
+    "role": "Admin",
+    "status": "Active"
+  },
+  {
+    "id": "membership-inspector-001",
+    "tenantId": "tenant-demo-001",
+    "warehouseId": "warehouse-sz-001",
+    "userId": "user-inspector-demo",
+    "role": "Inspector",
+    "status": "Active"
+  }
+]

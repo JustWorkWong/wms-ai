@@ -7,7 +7,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Hangfire.Core" Version="1.8.17" />
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.17" />
+    <PackageReference Include="Hangfire.PostgreSql" Version="1.20.11" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\ServiceDefaults\WmsAi.ServiceDefaults\WmsAi.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\Platform\WmsAi.Platform.Infrastructure\WmsAi.Platform.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Inbound\WmsAi.Inbound.Infrastructure\WmsAi.Inbound.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\AiGateway\WmsAi.AiGateway.Infrastructure\WmsAi.AiGateway.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

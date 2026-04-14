@@ -1,0 +1,18 @@
+[
+  {
+    "id": "provider-openai-001",
+    "code": "openai",
+    "name": "OpenAI",
+    "baseUrl": "https://api.openai.com/v1",
+    "apiKeyEnvVar": "OPENAI_API_KEY",
+    "isEnabled": true
+  },
+  {
+    "id": "provider-anthropic-001",
+    "code": "anthropic",
+    "name": "Anthropic",
+    "baseUrl": "https://api.anthropic.com/v1",
+    "apiKeyEnvVar": "ANTHROPIC_API_KEY",
+    "isEnabled": true
+  }
+]

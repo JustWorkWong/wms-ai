@@ -1,0 +1,14 @@
+[
+  {
+    "id": "user-admin-demo",
+    "loginName": "admin.demo",
+    "displayName": "演示管理员",
+    "status": "Active"
+  },
+  {
+    "id": "user-inspector-demo",
+    "loginName": "inspector.demo",
+    "displayName": "演示质检员",
+    "status": "Active"
+  }
+]

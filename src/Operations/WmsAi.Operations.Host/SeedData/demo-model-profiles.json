@@ -1,0 +1,24 @@
+[
+  {
+    "id": "profile-inspection-001",
+    "code": "inspection-multimodal-default",
+    "sceneCode": "inspection",
+    "providerCode": "openai",
+    "modelName": "gpt-4o-mini",
+    "temperature": 0.1,
+    "maxTokens": 3000,
+    "timeoutSeconds": 45,
+    "isEnabled": true
+  },
+  {
+    "id": "profile-inspection-002",
+    "code": "inspection-multimodal-anthropic",
+    "sceneCode": "inspection",
+    "providerCode": "anthropic",
+    "modelName": "claude-3-5-sonnet-20241022",
+    "temperature": 0.1,
+    "maxTokens": 3000,
+    "timeoutSeconds": 45,
+    "isEnabled": false
+  }
+]

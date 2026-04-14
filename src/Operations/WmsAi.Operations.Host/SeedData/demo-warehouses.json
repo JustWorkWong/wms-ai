@@ -1,0 +1,9 @@
+[
+  {
+    "id": "warehouse-sz-001",
+    "tenantId": "tenant-demo-001",
+    "code": "WH_SZ_01",
+    "name": "深圳一仓",
+    "status": "Active"
+  }
+]

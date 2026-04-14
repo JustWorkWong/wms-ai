@@ -1,0 +1,14 @@
+# Playwright Test Results
+playwright-report/
+test-results/
+
+# Screenshots and Videos
+*.png
+*.jpg
+*.jpeg
+*.webm
+*.mp4
+
+# Except test fixtures
+!tests/fixtures/*.jpg
+!tests/fixtures/*.png

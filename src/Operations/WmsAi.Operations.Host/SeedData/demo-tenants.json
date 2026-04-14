@@ -1,0 +1,8 @@
+[
+  {
+    "id": "tenant-demo-001",
+    "code": "TENANT_DEMO",
+    "name": "演示租户",
+    "status": "Active"
+  }
+]

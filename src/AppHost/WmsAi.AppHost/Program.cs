@@ -99,10 +99,12 @@ var aiGateway = builder.AddProject<Projects.WmsAi_AiGateway_Host>("ai-gateway")
 var operations = builder.AddProject<Projects.WmsAi_Operations_Host>("operations")
     .WithReference(userDb)
     .WithReference(businessDb)
+    .WithReference(aiDb)
     .WithReference(redis)
     .WithReference(rabbitmq)
     .WaitFor(userDb)
     .WaitFor(businessDb)
+    .WaitFor(aiDb)
     .WaitFor(redis)
     .WaitFor(rabbitmq);
 

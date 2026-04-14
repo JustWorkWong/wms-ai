@@ -1,0 +1,622 @@
+openapi: 3.0.3
+info:
+  title: WMS AI API
+  description: |
+    Intelligent Warehouse Management System API
+
+    This API provides endpoints for managing warehouse operations with AI-powered quality control.
+
+    ## Architecture
+    - Multi-tenant with warehouse-level isolation
+    - Event-driven communication between services
+    - AI workflow orchestration for quality inspections
+
+    ## Authentication
+    All endpoints require authentication via the Gateway service.
+    The Gateway injects execution context (tenant, warehouse, user) into request headers.
+  version: 1.0.0
+  contact:
+    name: WMS AI Team
+
+servers:
+  - url: http://localhost:5000
+    description: Local Gateway (via Aspire)
+  - url: http://localhost:5173
+    description: Development Frontend
+
+tags:
+  - name: Platform
+    description: Tenant, warehouse, and user management
+  - name: Inbound
+    description: Inbound notices and receipts
+  - name: QC
+    description: Quality control tasks and decisions
+  - name: AI Sessions
+    description: AI conversation sessions (AG-UI protocol)
+  - name: AI Inspections
+    description: AI inspection workflows
+
+components:
+  securitySchemes:
+    ExecutionContext:
+      type: apiKey
+      in: header
+      name: X-Execution-Context
+      description: |
+        Injected by Gateway middleware. Contains tenant, warehouse, and user information.
+        Format: JSON with tenantId, warehouseId, userId fields.
+
+  schemas:
+    # Platform Schemas
+    CreateTenantRequest:
+      type: object
+      required:
+        - code
+        - name
+      properties:
+        code:
+          type: string
+          maxLength: 64
+          example: "ACME"
+        name:
+          type: string
+          maxLength: 256
+          example: "Acme Corporation"
+
+    CreateTenantResponse:
+      type: object
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        tenantCode:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+          enum: [Active, Inactive]
+        createdAt:
+          type: string
+          format: date-time
+
+    # Inbound Schemas
+    CreateInboundNoticeRequest:
+      type: object
+      required:
+        - tenantId
+        - warehouseId
+        - noticeNo
+        - lines
+      properties:
+        tenantId:
+          type: string
+          maxLength: 64
+          example: "ACME"
+        warehouseId:
+          type: string
+          maxLength: 64
+          example: "WH001"
+        noticeNo:
+          type: string
+          maxLength: 64
+          example: "ASN-2024-001"
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/InboundNoticeLine'
+
+    InboundNoticeLine:
+      type: object
+      required:
+        - skuCode
+        - expectedQuantity
+      properties:
+        skuCode:
+          type: string
+          maxLength: 128
+          example: "SKU-12345"
+        expectedQuantity:
+          type: string
+          example: "100"
+          description: Stored as TEXT to support arbitrary precision
+
+    CreateInboundNoticeResponse:
+      type: object
+      properties:
+        inboundNoticeId:
+          type: string
+          format: uuid
+        noticeNo:
+          type: string
+        status:
+          type: string
+          enum: [Draft, Confirmed, Receiving, Completed, Cancelled]
+        createdAt:
+          type: string
+          format: date-time
+
+    RecordReceiptRequest:
+      type: object
+      required:
+        - tenantId
+        - warehouseId
+        - inboundNoticeId
+        - receiptNo
+        - lines
+      properties:
+        tenantId:
+          type: string
+        warehouseId:
+          type: string
+        inboundNoticeId:
+          type: string
+          format: uuid
+        receiptNo:
+          type: string
+          maxLength: 64
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReceiptLine'
+
+    ReceiptLine:
+      type: object
+      required:
+        - skuCode
+        - receivedQuantity
+      properties:
+        skuCode:
+          type: string
+        receivedQuantity:
+          type: string
+
+    RecordReceiptResponse:
+      type: object
+      properties:
+        receiptId:
+          type: string
+          format: uuid
+        receiptNo:
+          type: string
+        status:
+          type: string
+          enum: [Recorded, QcPending, QcCompleted, PutawayCompleted]
+
+    # QC Schemas
+    GetQcTasksResponse:
+      type: object
+      properties:
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/QcTask'
+
+    QcTask:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+        warehouseId:
+          type: string
+        receiptId:
+          type: string
+          format: uuid
+        taskNo:
+          type: string
+        skuCode:
+          type: string
+        status:
+          type: string
+          enum: [Pending, InProgress, Completed, Cancelled]
+        createdAt:
+          type: string
+          format: date-time
+
+    FinalizeQcDecisionRequest:
+      type: object
+      required:
+        - tenantId
+        - warehouseId
+        - qcTaskId
+        - decision
+        - inspectorId
+      properties:
+        tenantId:
+          type: string
+        warehouseId:
+          type: string
+        qcTaskId:
+          type: string
+          format: uuid
+        decision:
+          type: string
+          enum: [Pass, Fail, PartialPass]
+        reasoning:
+          type: string
+        inspectorId:
+          type: string
+
+    FinalizeQcDecisionResponse:
+      type: object
+      properties:
+        qcDecisionId:
+          type: string
+          format: uuid
+        qcTaskId:
+          type: string
+          format: uuid
+        decision:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    # AI Session Schemas (AG-UI Protocol)
+    SessionCreateRequest:
+      type: object
+      required:
+        - tenantId
+        - warehouseId
+        - userId
+        - businessObjectType
+        - businessObjectId
+      properties:
+        tenantId:
+          type: string
+        warehouseId:
+          type: string
+        userId:
+          type: string
+        sceneCode:
+          type: string
+          default: "default"
+        businessObjectType:
+          type: string
+          example: "QcTask"
+        businessObjectId:
+          type: string
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+    SessionCreateResponse:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [Active, Paused, Completed, Failed]
+        createdAt:
+          type: string
+          format: date-time
+
+    MessageSendRequest:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          example: "Please analyze the QC evidence"
+
+    SessionResumeRequest:
+      type: object
+      properties:
+        userInput:
+          type: string
+
+    AgUiEvent:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [message, thinking, tool_call, status_change]
+        data:
+          type: object
+      description: Server-Sent Event format for AG-UI protocol
+
+    # AI Inspection Schemas
+    ManualReviewRequest:
+      type: object
+      required:
+        - decision
+        - reasoning
+        - reviewerId
+      properties:
+        decision:
+          type: string
+          enum: [Pass, Fail, PartialPass]
+        reasoning:
+          type: string
+        reviewerId:
+          type: string
+
+    ManualReviewResponse:
+      type: object
+      properties:
+        inspectionRunId:
+          type: string
+          format: uuid
+        status:
+          type: string
+        decision:
+          type: string
+
+    # Error Schemas
+    ErrorResponse:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "Validation Error"
+        detail:
+          type: string
+          example: "The noticeNo field is required"
+        status:
+          type: integer
+          example: 400
+
+security:
+  - ExecutionContext: []
+
+paths:
+  # Platform Endpoints
+  /api/platform/tenants:
+    post:
+      tags:
+        - Platform
+      summary: Create a new tenant
+      operationId: createTenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTenantRequest'
+      responses:
+        '201':
+          description: Tenant created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateTenantResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Inbound Endpoints
+  /api/inbound/notices:
+    post:
+      tags:
+        - Inbound
+      summary: Create an inbound notice (ASN)
+      operationId: createInboundNotice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInboundNoticeRequest'
+      responses:
+        '201':
+          description: Inbound notice created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateInboundNoticeResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/inbound/receipts:
+    post:
+      tags:
+        - Inbound
+      summary: Record a receipt
+      operationId: recordReceipt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordReceiptRequest'
+      responses:
+        '201':
+          description: Receipt recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordReceiptResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # QC Endpoints
+  /api/inbound/qc/tasks:
+    get:
+      tags:
+        - QC
+      summary: Get QC tasks for a warehouse
+      operationId: getQcTasks
+      parameters:
+        - name: tenantId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: warehouseId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: QC tasks retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetQcTasksResponse'
+
+  /api/inbound/qc/decisions:
+    post:
+      tags:
+        - QC
+      summary: Finalize a QC decision
+      operationId: finalizeQcDecision
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinalizeQcDecisionRequest'
+      responses:
+        '201':
+          description: QC decision finalized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinalizeQcDecisionResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # AI Session Endpoints (AG-UI Protocol)
+  /api/ai/sessions:
+    post:
+      tags:
+        - AI Sessions
+      summary: Create a new AI session
+      operationId: createAiSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionCreateRequest'
+      responses:
+        '200':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionCreateResponse'
+
+  /api/ai/sessions/{sessionId}/stream:
+    get:
+      tags:
+        - AI Sessions
+      summary: Stream AI events (Server-Sent Events)
+      operationId: streamAiEvents
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Event stream
+          content:
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/AgUiEvent'
+
+  /api/ai/sessions/{sessionId}/messages:
+    post:
+      tags:
+        - AI Sessions
+      summary: Send a message to the AI session
+      operationId: sendMessage
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageSendRequest'
+      responses:
+        '202':
+          description: Message accepted
+        '404':
+          description: Session not found
+
+  /api/ai/sessions/{sessionId}/resume:
+    post:
+      tags:
+        - AI Sessions
+      summary: Resume a paused AI session
+      operationId: resumeSession
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionResumeRequest'
+      responses:
+        '200':
+          description: Session resumed
+        '400':
+          description: Session is not paused
+        '404':
+          description: Session not found
+
+  # AI Inspection Endpoints
+  /api/ai/inspections/{inspectionRunId}/manual-review:
+    post:
+      tags:
+        - AI Inspections
+      summary: Submit manual review for an inspection
+      operationId: submitManualReview
+      parameters:
+        - name: inspectionRunId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManualReviewRequest'
+      responses:
+        '200':
+          description: Manual review submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManualReviewResponse'
+        '400':
+          description: Inspection is not waiting for manual review
+        '404':
+          description: Inspection not found

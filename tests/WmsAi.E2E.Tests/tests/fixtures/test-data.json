@@ -1,0 +1,22 @@
+{
+  "testTenant": {
+    "tenantId": "TENANT_E2E",
+    "name": "E2E Test Tenant",
+    "warehouseId": "WH_E2E_01",
+    "warehouseName": "E2E Test Warehouse"
+  },
+  "testUser": {
+    "userId": "user.e2e",
+    "username": "user.e2e",
+    "displayName": "E2E Test User"
+  },
+  "testSku": {
+    "skuCode": "SKU_TEST_001",
+    "skuName": "Test Product",
+    "quantity": 100
+  },
+  "demoTenant": {
+    "tenantId": "TENANT_DEMO",
+    "warehouseId": "WH_SZ_01"
+  }
+}
