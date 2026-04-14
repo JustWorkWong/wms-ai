@@ -34,6 +34,10 @@ public static class Extensions
     public static TBuilder ConfigureOpenTelemetry<TBuilder>(this TBuilder builder)
         where TBuilder : IHostApplicationBuilder
     {
+        // AI 相关日志级别
+        builder.Logging.AddFilter("Microsoft.Extensions.AI", LogLevel.Debug);
+        builder.Logging.AddFilter("WmsAi.AiGateway", LogLevel.Information);
+
         builder.Logging.AddOpenTelemetry(logging =>
         {
             logging.IncludeFormattedMessage = true;
@@ -50,6 +54,7 @@ public static class Extensions
             .WithTracing(tracing =>
             {
                 tracing.AddSource(builder.Environment.ApplicationName)
+                    .AddSource("WmsAi.*")  // 追踪所有 WmsAi 的 ActivitySource
                     .AddAspNetCoreInstrumentation(tracing =>
                         tracing.Filter = context =>
                             !context.Request.Path.StartsWithSegments(HealthEndpointPath)

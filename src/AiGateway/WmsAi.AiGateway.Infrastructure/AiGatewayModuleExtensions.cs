@@ -1,6 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using OpenAI;
 using WmsAi.AiGateway.Application.Agents;
 using WmsAi.AiGateway.Application.Functions;
 using WmsAi.AiGateway.Application.Services;
@@ -52,6 +56,42 @@ public static class AiGatewayModuleExtensions
         services.AddScoped<IAgUiEventStreamService, AgUiEventStreamService>();
         services.AddScoped<IAgUiEventTransformer, AgUiEventTransformer>();
 
+        // 注册 IChatClient（使用 Microsoft.Extensions.AI）
+        services.AddSingleton<IChatClient>(sp =>
+        {
+            var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+            var hostEnvironment = sp.GetRequiredService<IHostEnvironment>();
+
+            var endpoint = configuration["AiProviders:Qwen:Endpoint"]
+                ?? throw new InvalidOperationException("AiProviders:Qwen:Endpoint not configured");
+            var apiKey = configuration["AiProviders:Qwen:ApiKey"]
+                ?? throw new InvalidOperationException("AiProviders:Qwen:ApiKey not configured");
+            var modelName = configuration["AiProviders:Qwen:DeploymentName"] ?? "qwen3-1.7b";
+
+            // 创建 OpenAI 兼容客户端
+            var openAiClient = new OpenAIClient(new System.ClientModel.ApiKeyCredential(apiKey), new OpenAIClientOptions
+            {
+                Endpoint = new Uri(endpoint)
+            });
+
+            var rawClient = openAiClient.GetChatClient(modelName);
+
+            // 包装中间件：OpenTelemetry + Logging
+            var chatClient = ((IChatClient)rawClient)
+                .AsBuilder()
+                .UseOpenTelemetry(
+                    sourceName: "WmsAi.AiGateway.AiModel",
+                    configure: cfg =>
+                    {
+                        // 开发环境记录完整 prompt 和 response
+                        cfg.EnableSensitiveData = hostEnvironment.IsDevelopment();
+                    })
+                .UseLogging(loggerFactory)
+                .Build();
+
+            return chatClient;
+        });
+
         // 注册智能体实现
         services.AddScoped<IEvidenceGapAgent, EvidenceGapAgent>();
         services.AddScoped<IInspectionDecisionAgent, InspectionDecisionAgent>();
@@ -63,21 +103,6 @@ public static class AiGatewayModuleExtensions
             var inboundBaseUrl = configuration["Services:Inbound:BaseUrl"] ?? "http://localhost:5002";
             client.BaseAddress = new Uri(inboundBaseUrl);
             client.Timeout = TimeSpan.FromSeconds(30);
-        });
-
-        // 注册 AI 模型客户端（支持 OpenAI 兼容接口）
-        services.AddHttpClient("AiModelClient", (serviceProvider, client) =>
-        {
-            var endpoint = configuration["AiProviders:Qwen:Endpoint"]
-                ?? throw new InvalidOperationException("AiProviders:Qwen:Endpoint not configured");
-            client.BaseAddress = new Uri(endpoint);
-            client.Timeout = TimeSpan.FromSeconds(60);
-
-            var apiKey = configuration["AiProviders:Qwen:ApiKey"];
-            if (!string.IsNullOrWhiteSpace(apiKey))
-            {
-                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
-            }
         });
 
         // 配置基于 CAP 的事件总线

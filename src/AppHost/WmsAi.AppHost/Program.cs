@@ -14,7 +14,8 @@ var builder = DistributedApplication.CreateBuilder(args);
 var postgresPassword = builder.AddParameter("postgres-password", "postgres", secret: true);
 var postgres = builder.AddPostgres("postgres", password: postgresPassword)
     .WithImage("postgres:16")
-    .WithDataVolume();
+    .WithDataVolume()
+    .WithPgAdmin(); // ← 添加 pgAdmin 管理界面
 
 var userDb = postgres.AddDatabase("UserDb");
 var businessDb = postgres.AddDatabase("BusinessDb");
@@ -25,7 +26,8 @@ var hangfireDb = postgres.AddDatabase("HangfireDb");
 // 用途：缓存、分布式锁、会话状态
 var redis = builder.AddRedis("redis")
     .WithImage("redis:7")
-    .WithDataVolume();
+    .WithDataVolume()
+    .WithRedisCommander(); // ← 添加 Redis Commander 管理界面
 
 // RabbitMQ：CAP 事件总线使用的消息中间件
 // 管理后台：http://localhost:15672 （wmsai / wmsai）

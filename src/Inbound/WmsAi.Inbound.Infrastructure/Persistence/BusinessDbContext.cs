@@ -136,6 +136,9 @@ public static class InboundModuleExtensions
         services.AddScoped<RecordReceiptHandler>();
         services.AddScoped<FinalizeQcDecisionHandler>();
         services.AddScoped<GetQcTasksHandler>();
+        services.AddScoped<GetQcTaskByIdHandler>();
+        services.AddScoped<GetQcEvidenceHandler>();
+        services.AddScoped<GetSkuQualityProfileHandler>();
 
         services.AddScoped<WmsAi.Inbound.Domain.Inbound.IInboundNoticeRepository, WmsAi.Inbound.Infrastructure.Repositories.InboundNoticeRepository>();
         services.AddScoped<WmsAi.Inbound.Domain.Receipts.IReceiptRepository, WmsAi.Inbound.Infrastructure.Repositories.ReceiptRepository>();

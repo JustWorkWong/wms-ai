@@ -73,6 +73,7 @@ public sealed class BusinessApiClient : IBusinessApiClient
         if (!string.IsNullOrWhiteSpace(warehouseId))
             request.Headers.Add("X-Warehouse-Id", warehouseId);
 
+        // 如果有 HttpContext，则传递用户和关联 ID
         if (context != null)
         {
             if (context.Request.Headers.TryGetValue("X-User-Id", out var userId))
@@ -82,6 +83,13 @@ public sealed class BusinessApiClient : IBusinessApiClient
                 request.Headers.Add("X-Correlation-Id", correlationId.ToString());
             else
                 request.Headers.Add("X-Correlation-Id", Guid.NewGuid().ToString());
+        }
+        else
+        {
+            // 后台任务（如 CAP 事件处理器）没有 HttpContext
+            // 使用系统用户和生成新的关联 ID
+            request.Headers.Add("X-User-Id", "system");
+            request.Headers.Add("X-Correlation-Id", Guid.NewGuid().ToString());
         }
     }
 }

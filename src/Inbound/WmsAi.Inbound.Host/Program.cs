@@ -11,9 +11,31 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 builder.Services.AddInboundModule(builder.Configuration);
 
+// 添加 Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new()
+    {
+        Title = "WmsAi.Inbound API",
+        Version = "v1",
+        Description = "入库域 API - 到货通知、收货、质检"
+    });
+});
+
 var app = builder.Build();
 
 await BusinessDatabaseInitializer.InitializeAsync(app.Services);
+
+// 启用 Swagger（仅开发环境）
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Inbound API v1");
+    });
+}
 
 app.Use(async (context, next) =>
 {
@@ -59,6 +81,58 @@ app.MapGet("/api/inbound/qc/tasks", async (
 {
     var result = await handler.Handle(tenantId, warehouseId, cancellationToken);
     return Results.Ok(result);
+});
+
+app.MapGet("/api/inbound/qc/tasks/{qcTaskId:guid}", async (
+    Guid qcTaskId,
+    HttpContext httpContext,
+    GetQcTaskByIdHandler handler,
+    CancellationToken cancellationToken) =>
+{
+    var tenantId = httpContext.Request.Query["tenantId"].FirstOrDefault()
+        ?? httpContext.Request.Headers["X-Tenant-Id"].FirstOrDefault();
+    var warehouseId = httpContext.Request.Query["warehouseId"].FirstOrDefault()
+        ?? httpContext.Request.Headers["X-Warehouse-Id"].FirstOrDefault();
+
+    if (string.IsNullOrEmpty(tenantId) || string.IsNullOrEmpty(warehouseId))
+        return Results.BadRequest("tenantId and warehouseId are required");
+
+    var result = await handler.Handle(qcTaskId, tenantId, warehouseId, cancellationToken);
+    return result != null ? Results.Ok(result) : Results.NotFound();
+});
+
+app.MapGet("/api/inbound/qc/tasks/{qcTaskId:guid}/evidence", async (
+    Guid qcTaskId,
+    HttpContext httpContext,
+    GetQcEvidenceHandler handler,
+    CancellationToken cancellationToken) =>
+{
+    var tenantId = httpContext.Request.Query["tenantId"].FirstOrDefault()
+        ?? httpContext.Request.Headers["X-Tenant-Id"].FirstOrDefault();
+    var warehouseId = httpContext.Request.Query["warehouseId"].FirstOrDefault()
+        ?? httpContext.Request.Headers["X-Warehouse-Id"].FirstOrDefault();
+
+    if (string.IsNullOrEmpty(tenantId) || string.IsNullOrEmpty(warehouseId))
+        return Results.BadRequest("tenantId and warehouseId are required");
+
+    var result = await handler.Handle(qcTaskId, tenantId, warehouseId, cancellationToken);
+    return Results.Ok(result);
+});
+
+app.MapGet("/api/inbound/skus/{skuCode}/quality-profile", async (
+    string skuCode,
+    HttpContext httpContext,
+    GetSkuQualityProfileHandler handler,
+    CancellationToken cancellationToken) =>
+{
+    var tenantId = httpContext.Request.Query["tenantId"].FirstOrDefault()
+        ?? httpContext.Request.Headers["X-Tenant-Id"].FirstOrDefault();
+
+    if (string.IsNullOrEmpty(tenantId))
+        return Results.BadRequest("tenantId is required");
+
+    var result = await handler.Handle(skuCode, tenantId, cancellationToken);
+    return result != null ? Results.Ok(result) : Results.NotFound();
 });
 
 app.MapPost("/api/inbound/qc/decisions", async (

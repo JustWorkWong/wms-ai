@@ -10,22 +10,26 @@ using WmsAi.Contracts.Events;
 
 namespace WmsAi.AiGateway.Host.Events;
 
-public sealed class InboundEventConsumer(
-    ILogger<InboundEventConsumer> logger,
-    IAiInspectionRunRepository inspectionRepository,
-    IMafWorkflowRunRepository workflowRepository,
-    IEvidenceGapAgent evidenceGapAgent,
-    IInspectionDecisionAgent inspectionDecisionAgent,
-    IInboundBusinessFunctions inboundFunctions,
-    IBusinessApiClient businessApiClient)
+public sealed class InboundEventConsumer : ICapSubscribe
 {
+    private readonly ILogger<InboundEventConsumer> _logger;
+    private readonly IServiceProvider _serviceProvider;
+
     private const string SystemUserId = "system";
     private const decimal HighConfidenceThreshold = 0.8m;
+
+    public InboundEventConsumer(
+        ILogger<InboundEventConsumer> logger,
+        IServiceProvider serviceProvider)
+    {
+        _logger = logger;
+        _serviceProvider = serviceProvider;
+    }
 
     [CapSubscribe("qctask.created.v1")]
     public async Task HandleQcTaskCreated(QcTaskCreatedV1 @event)
     {
-        logger.LogInformation(
+        _logger.LogInformation(
             "Received QcTaskCreatedV1 event: EventId={EventId}, QcTaskId={QcTaskId}, TaskNo={TaskNo}, SkuCode={SkuCode}",
             @event.EventId,
             @event.QcTaskId,
@@ -34,18 +38,43 @@ public sealed class InboundEventConsumer(
 
         try
         {
-            await ExecuteAiInspectionWorkflowAsync(@event, CancellationToken.None);
+            // 使用 Scope 来解析 Scoped 服务
+            using var scope = _serviceProvider.CreateScope();
+            var inspectionRepository = scope.ServiceProvider.GetRequiredService<IAiInspectionRunRepository>();
+            var workflowRepository = scope.ServiceProvider.GetRequiredService<IMafWorkflowRunRepository>();
+            var evidenceGapAgent = scope.ServiceProvider.GetRequiredService<IEvidenceGapAgent>();
+            var inspectionDecisionAgent = scope.ServiceProvider.GetRequiredService<IInspectionDecisionAgent>();
+            var inboundFunctions = scope.ServiceProvider.GetRequiredService<IInboundBusinessFunctions>();
+            var businessApiClient = scope.ServiceProvider.GetRequiredService<IBusinessApiClient>();
+
+            await ExecuteAiInspectionWorkflowAsync(
+                @event,
+                inspectionRepository,
+                workflowRepository,
+                evidenceGapAgent,
+                inspectionDecisionAgent,
+                inboundFunctions,
+                businessApiClient,
+                CancellationToken.None);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex,
+            _logger.LogError(ex,
                 "Failed to execute AI inspection workflow for QcTaskId={QcTaskId}, TaskNo={TaskNo}",
                 @event.QcTaskId,
                 @event.TaskNo);
         }
     }
 
-    private async Task ExecuteAiInspectionWorkflowAsync(QcTaskCreatedV1 @event, CancellationToken cancellationToken)
+    private async Task ExecuteAiInspectionWorkflowAsync(
+        QcTaskCreatedV1 @event,
+        IAiInspectionRunRepository inspectionRepository,
+        IMafWorkflowRunRepository workflowRepository,
+        IEvidenceGapAgent evidenceGapAgent,
+        IInspectionDecisionAgent inspectionDecisionAgent,
+        IInboundBusinessFunctions inboundFunctions,
+        IBusinessApiClient businessApiClient,
+        CancellationToken cancellationToken)
     {
         // 1. 创建工作流运行记录
         var workflowRun = new MafWorkflowRun(
@@ -63,7 +92,7 @@ public sealed class InboundEventConsumer(
         workflowRun.Start();
         await workflowRepository.UpdateAsync(workflowRun, cancellationToken);
 
-        logger.LogInformation(
+        _logger.LogInformation(
             "Created workflow run: WorkflowRunId={WorkflowRunId}, QcTaskId={QcTaskId}",
             workflowRun.Id,
             @event.QcTaskId);
@@ -83,7 +112,7 @@ public sealed class InboundEventConsumer(
         inspectionRun.Start();
         await inspectionRepository.UpdateAsync(inspectionRun, cancellationToken);
 
-        logger.LogInformation(
+        _logger.LogInformation(
             "Created inspection run: InspectionRunId={InspectionRunId}, QcTaskId={QcTaskId}",
             inspectionRun.Id,
             @event.QcTaskId);
@@ -109,7 +138,7 @@ public sealed class InboundEventConsumer(
                 @event.WarehouseId,
                 cancellationToken);
 
-            logger.LogInformation(
+            _logger.LogInformation(
                 "Retrieved evidence assets: Count={Count}, QcTaskId={QcTaskId}",
                 evidenceAssets.Count,
                 @event.QcTaskId);
@@ -141,7 +170,7 @@ public sealed class InboundEventConsumer(
 
             var evidenceGapResult = await evidenceGapAgent.AnalyzeEvidenceAsync(evidenceGapContext, cancellationToken);
 
-            logger.LogInformation(
+            _logger.LogInformation(
                 "Evidence gap analysis completed: IsComplete={IsComplete}, Confidence={Confidence}, QcTaskId={QcTaskId}",
                 evidenceGapResult.IsComplete,
                 evidenceGapResult.ConfidenceScore,
@@ -169,7 +198,7 @@ public sealed class InboundEventConsumer(
                     evidenceGapResult.Reasoning,
                     cancellationToken);
 
-                logger.LogWarning(
+                _logger.LogWarning(
                     "Evidence gaps detected: Gaps={GapCount}, QcTaskId={QcTaskId}",
                     evidenceGapResult.Gaps.Count,
                     @event.QcTaskId);
@@ -204,7 +233,7 @@ public sealed class InboundEventConsumer(
 
             var decisionResult = await inspectionDecisionAgent.MakeDecisionAsync(inspectionContext, cancellationToken);
 
-            logger.LogInformation(
+            _logger.LogInformation(
                 "Inspection decision completed: Decision={Decision}, Confidence={Confidence}, QcTaskId={QcTaskId}",
                 decisionResult.Decision,
                 decisionResult.ConfidenceScore,
@@ -233,7 +262,7 @@ public sealed class InboundEventConsumer(
             // 9. 根据置信度决定是否自动完成质检
             if (decisionResult.ConfidenceScore >= HighConfidenceThreshold)
             {
-                logger.LogInformation(
+                _logger.LogInformation(
                     "High confidence decision, auto-finalizing: Confidence={Confidence}, QcTaskId={QcTaskId}",
                     decisionResult.ConfidenceScore,
                     @event.QcTaskId);
@@ -267,7 +296,7 @@ public sealed class InboundEventConsumer(
                         autoFinalized = true
                     }));
 
-                    logger.LogInformation(
+                    _logger.LogInformation(
                         "QC decision auto-finalized: QcDecisionId={QcDecisionId}, QcTaskId={QcTaskId}",
                         finalizeResult.QcDecisionId,
                         @event.QcTaskId);
@@ -280,7 +309,7 @@ public sealed class InboundEventConsumer(
             else
             {
                 // 置信度低，标记为等待人工复核
-                logger.LogInformation(
+                _logger.LogInformation(
                     "Low confidence decision, escalating to manual review: Confidence={Confidence}, QcTaskId={QcTaskId}",
                     decisionResult.ConfidenceScore,
                     @event.QcTaskId);
@@ -288,7 +317,7 @@ public sealed class InboundEventConsumer(
                 inspectionRun.EscalateToManualReview();
                 workflowRun.Pause();
 
-                logger.LogInformation(
+                _logger.LogInformation(
                     "Inspection escalated to manual review: InspectionRunId={InspectionRunId}, QcTaskId={QcTaskId}",
                     inspectionRun.Id,
                     @event.QcTaskId);
@@ -299,7 +328,7 @@ public sealed class InboundEventConsumer(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex,
+            _logger.LogError(ex,
                 "AI inspection workflow failed: QcTaskId={QcTaskId}, WorkflowRunId={WorkflowRunId}",
                 @event.QcTaskId,
                 workflowRun.Id);
@@ -317,7 +346,7 @@ public sealed class InboundEventConsumer(
     [CapSubscribe("receipt.recorded.v1")]
     public async Task HandleReceiptRecorded(ReceiptRecordedV1 @event)
     {
-        logger.LogInformation(
+        _logger.LogInformation(
             "Received ReceiptRecordedV1 event: EventId={EventId}, ReceiptId={ReceiptId}, ReceiptNo={ReceiptNo}",
             @event.EventId,
             @event.ReceiptId,
@@ -330,7 +359,7 @@ public sealed class InboundEventConsumer(
     [CapSubscribe("qcdecision.finalized.v1")]
     public async Task HandleQcDecisionFinalized(QcDecisionFinalizedV1 @event)
     {
-        logger.LogInformation(
+        _logger.LogInformation(
             "Received QcDecisionFinalizedV1 event: EventId={EventId}, QcTaskId={QcTaskId}, DecisionStatus={DecisionStatus}",
             @event.EventId,
             @event.QcTaskId,

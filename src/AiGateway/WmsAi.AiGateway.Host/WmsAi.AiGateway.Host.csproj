@@ -11,6 +11,7 @@
     <PackageReference Include="DotNetCore.CAP.PostgreSQL" Version="10.0.2-preview-287480508" />
     <PackageReference Include="DotNetCore.CAP.RabbitMQ" Version="10.0.2-preview-287480508" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.5" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
   </ItemGroup>
 
   <ItemGroup>
