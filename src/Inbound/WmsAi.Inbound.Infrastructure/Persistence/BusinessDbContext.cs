@@ -116,12 +116,12 @@ public static class InboundModuleExtensions
     public static IServiceCollection AddInboundModule(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("BusinessDb")
-            ?? "Data Source=wmsai-inbound-business.db";
+            ?? "Host=localhost;Database=BusinessDb;Username=postgres;Password=postgres";
 
         services.AddSingleton<VersionedEntitySaveChangesInterceptor>();
         services.AddDbContext<BusinessDbContext>((serviceProvider, options) =>
         {
-            options.UseSqlite(connectionString);
+            options.UseNpgsql(connectionString);
             options.AddInterceptors(serviceProvider.GetRequiredService<VersionedEntitySaveChangesInterceptor>());
         });
         services.AddScoped<IBusinessDbContext>(serviceProvider => serviceProvider.GetRequiredService<BusinessDbContext>());

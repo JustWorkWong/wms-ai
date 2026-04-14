@@ -114,12 +114,12 @@ public static class PlatformModuleExtensions
     public static IServiceCollection AddPlatformModule(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("UserDb")
-            ?? "Data Source=wmsai-platform-user.db";
+            ?? "Host=localhost;Database=UserDb;Username=postgres;Password=postgres";
 
         services.AddSingleton<VersionedEntitySaveChangesInterceptor>();
         services.AddDbContext<UserDbContext>((serviceProvider, options) =>
         {
-            options.UseSqlite(connectionString);
+            options.UseNpgsql(connectionString);
             options.AddInterceptors(serviceProvider.GetRequiredService<VersionedEntitySaveChangesInterceptor>());
         });
         services.AddScoped<IPlatformUserDbContext>(serviceProvider => serviceProvider.GetRequiredService<UserDbContext>());

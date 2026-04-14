@@ -8,6 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="9.5.2" />
+    <PackageReference Include="Aspire.Hosting.Redis" Version="9.5.2" />
+    <PackageReference Include="Aspire.Hosting.RabbitMQ" Version="9.5.2" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Gateway\WmsAi.Gateway.Host\WmsAi.Gateway.Host.csproj" />
     <ProjectReference Include="..\..\Platform\WmsAi.Platform.Host\WmsAi.Platform.Host.csproj" />
     <ProjectReference Include="..\..\Inbound\WmsAi.Inbound.Host\WmsAi.Inbound.Host.csproj" />
