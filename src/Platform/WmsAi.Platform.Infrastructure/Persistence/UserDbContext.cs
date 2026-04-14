@@ -65,7 +65,7 @@ public sealed class UserDbContext(DbContextOptions<UserDbContext> options) : DbC
             builder.Property(entity => entity.Name).HasMaxLength(256);
             builder.HasIndex(entity => new { entity.TenantId, entity.Code }).IsUnique();
             builder.HasOne<Tenant>()
-                .WithMany(entity => entity.Warehouses)
+                .WithMany()
                 .HasForeignKey(entity => entity.TenantId)
                 .OnDelete(DeleteBehavior.Restrict);
             VersionedEntityTypeConfiguration.ApplyVersion(builder);

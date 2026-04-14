@@ -28,7 +28,7 @@ public class DomainEventDispatcherTests
         await dbContext.Database.EnsureCreatedAsync();
 
         var tenant = new Tenant("TENANT_001", "Test Tenant");
-        var warehouse = tenant.AddDefaultWarehouse("WH_001", "Test Warehouse");
+        var warehouse = new Warehouse(tenant.Id, "WH_001", "Test Warehouse", true);
 
         await dbContext.AddTenantAsync(tenant, CancellationToken.None);
         await dbContext.AddWarehouseAsync(warehouse, CancellationToken.None);

@@ -4,8 +4,6 @@ namespace WmsAi.Platform.Domain.Tenants;
 
 public sealed class Tenant : AggregateRoot
 {
-    private readonly List<Warehouse> _warehouses = [];
-
     private Tenant()
     {
     }
@@ -27,15 +25,6 @@ public sealed class Tenant : AggregateRoot
     public string Name { get; private set; } = string.Empty;
 
     public string Status { get; private set; } = string.Empty;
-
-    public IReadOnlyCollection<Warehouse> Warehouses => _warehouses;
-
-    public Warehouse AddDefaultWarehouse(string warehouseCode, string warehouseName)
-    {
-        var warehouse = new Warehouse(Id, warehouseCode, warehouseName, true);
-        _warehouses.Add(warehouse);
-        return warehouse;
-    }
 
     public void Rename(string name)
     {

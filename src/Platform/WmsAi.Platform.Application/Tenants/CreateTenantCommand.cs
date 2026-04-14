@@ -23,7 +23,7 @@ public sealed class CreateTenantHandler(IPlatformUserDbContext userDbContext)
         CancellationToken cancellationToken = default)
     {
         var tenant = new Tenant(command.TenantCode, command.TenantName);
-        var warehouse = tenant.AddDefaultWarehouse(command.DefaultWarehouseCode, command.DefaultWarehouseName);
+        var warehouse = new Warehouse(tenant.Id, command.DefaultWarehouseCode, command.DefaultWarehouseName, true);
         var user = new User(command.AdminLoginName);
         var membership = new Membership(tenant.Id, warehouse.Id, user.Id, "owner");
 
