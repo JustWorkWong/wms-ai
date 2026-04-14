@@ -64,11 +64,6 @@ var nacos = builder.AddContainer("nacos", "nacos/nacos-server")
 // Service Applications
 // ============================================================================
 
-// Gateway - YARP reverse proxy with authentication
-// Handles: routing, authentication, rate limiting
-var gateway = builder.AddProject<Projects.WmsAi_Gateway_Host>("gateway")
-    .WithReference(redis);
-
 // Platform - User/Tenant/Warehouse management bounded context
 // Database: UserDb (tenants, warehouses, users, memberships)
 var platform = builder.AddProject<Projects.WmsAi_Platform_Host>("platform")
@@ -110,5 +105,14 @@ var operations = builder.AddProject<Projects.WmsAi_Operations_Host>("operations"
     .WaitFor(businessDb)
     .WaitFor(redis)
     .WaitFor(rabbitmq);
+
+// Gateway - YARP reverse proxy with authentication
+// Handles: routing, authentication, rate limiting
+var gateway = builder.AddProject<Projects.WmsAi_Gateway_Host>("gateway")
+    .WithReference(redis)
+    .WithReference(platform)
+    .WithReference(inbound)
+    .WithReference(aiGateway)
+    .WithReference(operations);
 
 builder.Build().Run();
