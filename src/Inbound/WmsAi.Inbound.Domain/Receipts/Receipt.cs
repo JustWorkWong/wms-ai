@@ -35,6 +35,8 @@ public sealed class Receipt : WarehouseScopedAggregateRoot
         {
             throw new ArgumentException("At least one line is required.", nameof(lines));
         }
+
+        RaiseDomainEvent(new ReceiptRecordedEvent(Id, TenantId, WarehouseId, InboundNoticeId, ReceiptNo, ReceivedAt));
     }
 
     public Guid InboundNoticeId { get; private set; }

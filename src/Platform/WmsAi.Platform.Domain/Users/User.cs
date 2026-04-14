@@ -13,6 +13,8 @@ public sealed class User : AggregateRoot
         ArgumentException.ThrowIfNullOrWhiteSpace(loginName);
         LoginName = loginName.Trim();
         Status = "active";
+
+        RaiseDomainEvent(new UserCreatedEvent(Id, LoginName));
     }
 
     public string LoginName { get; private set; } = string.Empty;

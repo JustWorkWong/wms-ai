@@ -27,6 +27,8 @@ public sealed class QcTask : WarehouseScopedAggregateRoot
         SkuCode = skuCode.Trim();
         TaskNo = taskNo.Trim();
         Status = "pending_inspection";
+
+        RaiseDomainEvent(new QcTaskCreatedEvent(Id, TenantId, WarehouseId, InboundNoticeId, ReceiptId, TaskNo, SkuCode));
     }
 
     public Guid InboundNoticeId { get; private set; }
@@ -58,5 +60,7 @@ public sealed class QcTask : WarehouseScopedAggregateRoot
             "rejected" => "rejected",
             _ => "reviewed"
         };
+
+        RaiseDomainEvent(new QcDecisionFinalizedEvent(Id, qcDecisionId, decisionStatus));
     }
 }

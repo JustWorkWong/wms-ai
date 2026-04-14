@@ -18,6 +18,8 @@ public sealed class Warehouse : AggregateRoot
         Code = code.Trim();
         Name = name.Trim();
         IsDefault = isDefault;
+
+        RaiseDomainEvent(new WarehouseCreatedEvent(Id, TenantId, Code, Name, IsDefault));
     }
 
     public Guid TenantId { get; private set; }

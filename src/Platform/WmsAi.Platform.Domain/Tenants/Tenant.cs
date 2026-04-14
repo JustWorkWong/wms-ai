@@ -18,6 +18,8 @@ public sealed class Tenant : AggregateRoot
         Code = code.Trim();
         Name = name.Trim();
         Status = "active";
+
+        RaiseDomainEvent(new TenantCreatedEvent(Id, Code, Name));
     }
 
     public string Code { get; private set; } = string.Empty;

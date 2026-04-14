@@ -27,6 +27,8 @@ public sealed class InboundNotice : WarehouseScopedAggregateRoot
         {
             throw new ArgumentException("At least one line is required.", nameof(lines));
         }
+
+        RaiseDomainEvent(new InboundNoticeCreatedEvent(Id, TenantId, WarehouseId, NoticeNo));
     }
 
     public string NoticeNo { get; private set; } = string.Empty;
