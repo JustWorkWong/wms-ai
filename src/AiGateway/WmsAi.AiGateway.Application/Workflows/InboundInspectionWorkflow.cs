@@ -8,8 +8,7 @@ namespace WmsAi.AiGateway.Application.Workflows;
 public sealed class InboundInspectionWorkflow(
     IMafPersistenceService persistenceService,
     IEvidenceGapAgent evidenceGapAgent,
-    IInspectionDecisionAgent inspectionDecisionAgent,
-    IModelRoutingService modelRoutingService)
+    IInspectionDecisionAgent inspectionDecisionAgent)
 {
     private const decimal ConfidenceThreshold = 0.85m;
 

@@ -1,12 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using WmsAi.AiGateway.Application.Agents;
+using WmsAi.AiGateway.Application.Services;
 using WmsAi.AiGateway.Domain.Inspections;
 using WmsAi.AiGateway.Domain.MafSessions;
 using WmsAi.AiGateway.Domain.ModelConfig;
 using WmsAi.AiGateway.Domain.Workflows;
+using WmsAi.AiGateway.Infrastructure.Agents;
 using WmsAi.AiGateway.Infrastructure.Persistence;
 using WmsAi.AiGateway.Infrastructure.Repositories;
+using WmsAi.AiGateway.Infrastructure.Services;
 using WmsAi.SharedKernel.Persistence;
 
 namespace WmsAi.AiGateway.Infrastructure;
@@ -38,6 +42,14 @@ public static class AiGatewayModuleExtensions
         services.AddScoped<IAiInspectionRunRepository, AiInspectionRunRepository>();
         services.AddScoped<IAiModelProfileRepository, AiModelProfileRepository>();
         services.AddScoped<IAiModelProviderRepository, AiModelProviderRepository>();
+
+        // Register services
+        services.AddScoped<IMafPersistenceService, MafPersistenceService>();
+        services.AddScoped<IModelRoutingService, ModelRoutingService>();
+
+        // Register agents
+        services.AddScoped<IEvidenceGapAgent, EvidenceGapAgent>();
+        services.AddScoped<IInspectionDecisionAgent, InspectionDecisionAgent>();
 
         // Configure CAP for event bus
         services.AddCap(options =>
