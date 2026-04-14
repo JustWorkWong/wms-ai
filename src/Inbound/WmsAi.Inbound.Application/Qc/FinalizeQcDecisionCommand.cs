@@ -63,7 +63,7 @@ public sealed class FinalizeQcDecisionHandler(IBusinessDbContext businessDbConte
 
         try
         {
-            qcTask.Finalize(decision.Id, command.DecisionStatus);
+            qcTask.Finalize(decision.Id, command.DecisionStatus, command.DecisionSource);
         }
         catch (InvalidOperationException exception)
         {

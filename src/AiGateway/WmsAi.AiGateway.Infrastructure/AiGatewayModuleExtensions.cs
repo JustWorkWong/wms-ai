@@ -38,24 +38,25 @@ public static class AiGatewayModuleExtensions
             options.AddInterceptors(serviceProvider.GetRequiredService<DomainEventInterceptor>());
         });
 
-        // Register repositories
+        // 注册仓储
         services.AddScoped<IMafSessionRepository, MafSessionRepository>();
         services.AddScoped<IMafWorkflowRunRepository, MafWorkflowRunRepository>();
         services.AddScoped<IAiInspectionRunRepository, AiInspectionRunRepository>();
         services.AddScoped<IAiModelProfileRepository, AiModelProfileRepository>();
         services.AddScoped<IAiModelProviderRepository, AiModelProviderRepository>();
+        services.AddScoped<IAiRoutingPolicyRepository, AiRoutingPolicyRepository>();
 
-        // Register services
+        // 注册领域服务
         services.AddScoped<IMafPersistenceService, MafPersistenceService>();
         services.AddScoped<IModelRoutingService, ModelRoutingService>();
         services.AddScoped<IAgUiEventStreamService, AgUiEventStreamService>();
         services.AddScoped<IAgUiEventTransformer, AgUiEventTransformer>();
 
-        // Register agents
+        // 注册智能体实现
         services.AddScoped<IEvidenceGapAgent, EvidenceGapAgent>();
         services.AddScoped<IInspectionDecisionAgent, InspectionDecisionAgent>();
 
-        // Register business functions
+        // 注册业务函数与外部业务 API 客户端
         services.AddScoped<IInboundBusinessFunctions, InboundBusinessFunctions>();
         services.AddHttpClient<IBusinessApiClient, BusinessApiClient>((serviceProvider, client) =>
         {
@@ -64,7 +65,22 @@ public static class AiGatewayModuleExtensions
             client.Timeout = TimeSpan.FromSeconds(30);
         });
 
-        // Configure CAP for event bus
+        // 注册 AI 模型客户端（支持 OpenAI 兼容接口）
+        services.AddHttpClient("AiModelClient", (serviceProvider, client) =>
+        {
+            var endpoint = configuration["AiProviders:Qwen:Endpoint"]
+                ?? throw new InvalidOperationException("AiProviders:Qwen:Endpoint not configured");
+            client.BaseAddress = new Uri(endpoint);
+            client.Timeout = TimeSpan.FromSeconds(60);
+
+            var apiKey = configuration["AiProviders:Qwen:ApiKey"];
+            if (!string.IsNullOrWhiteSpace(apiKey))
+            {
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+            }
+        });
+
+        // 配置基于 CAP 的事件总线
         services.AddCap(options =>
         {
             options.UseEntityFramework<AiDbContext>();

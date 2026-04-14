@@ -5,15 +5,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-// Add AiGateway module (includes CAP configuration)
+// 注册 AiGateway 模块（包含 CAP 事件总线配置）
 builder.Services.AddAiGatewayModule(builder.Configuration);
 
 builder.Services.AddScoped<InboundEventConsumer>();
 
-// Add controllers
+// 注册控制器
 builder.Services.AddControllers();
 
-// Add HttpContextAccessor for BusinessApiClient
+// BusinessApiClient 需要访问当前请求上下文
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
@@ -21,33 +21,10 @@ var app = builder.Build();
 app.MapGet("/", () => Results.Ok());
 app.MapDefaultEndpoints();
 
-// Map controllers
+// 映射控制器路由
 app.MapControllers();
 
-// Placeholder API endpoints for inspection workflow
-app.MapPost("/api/ai/inspections/start", async (StartInspectionRequest request) =>
-{
-    // TODO: Implement workflow start logic
-    return Results.Ok(new { workflowRunId = Guid.NewGuid(), status = "Pending" });
-});
-
-app.MapGet("/api/ai/inspections/{id:guid}", async (Guid id) =>
-{
-    // TODO: Implement workflow status query
-    return Results.Ok(new { id, status = "Running", currentNode = "CheckEvidenceCompleteness" });
-});
-
-app.MapPost("/api/ai/inspections/{id:guid}/resume", async (Guid id, ResumeInspectionRequest request) =>
-{
-    // TODO: Implement workflow resume logic
-    return Results.Ok(new { id, status = "Resumed" });
-});
-
-// Initialize database
+// 初始化数据库
 await AiGatewayDatabaseInitializer.InitializeAsync(app.Services);
 
 app.Run();
-
-public record StartInspectionRequest(Guid QcTaskId, string TenantId, string WarehouseId, string UserId);
-public record ResumeInspectionRequest(string Decision, string Reasoning);
-

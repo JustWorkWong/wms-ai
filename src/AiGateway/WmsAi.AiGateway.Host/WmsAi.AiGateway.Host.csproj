@@ -7,9 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DotNetCore.CAP" Version="8.3.2" />
-    <PackageReference Include="DotNetCore.CAP.PostgreSQL" Version="8.3.2" />
-    <PackageReference Include="DotNetCore.CAP.RabbitMQ" Version="8.3.2" />
+    <PackageReference Include="DotNetCore.CAP" Version="10.0.2-preview-287480508" />
+    <PackageReference Include="DotNetCore.CAP.PostgreSQL" Version="10.0.2-preview-287480508" />
+    <PackageReference Include="DotNetCore.CAP.RabbitMQ" Version="10.0.2-preview-287480508" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.5" />
   </ItemGroup>
 
   <ItemGroup>

@@ -69,7 +69,7 @@ public class DomainEventsTests
         qcTask.ClearDomainEvents();
 
         var decisionId = Guid.NewGuid();
-        qcTask.Finalize(decisionId, "accepted");
+        qcTask.Finalize(decisionId, "accepted", "AI_AUTO");
 
         qcTask.DomainEvents.Should().ContainSingle();
         var domainEvent = qcTask.DomainEvents.First();

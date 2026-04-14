@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using WmsAi.AiGateway.Domain.ModelConfig;
 using WmsAi.AiGateway.Infrastructure.Persistence;
@@ -10,6 +12,11 @@ namespace WmsAi.Operations.Host.Services;
 
 public class SeedDataImporter
 {
+    private static readonly JsonSerializerOptions SeedJsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
     private readonly UserDbContext _userDb;
     private readonly AiDbContext _aiDb;
     private readonly ILogger<SeedDataImporter> _logger;
@@ -77,7 +84,7 @@ public class SeedDataImporter
         }
 
         var json = await File.ReadAllTextAsync(filePath, cancellationToken);
-        var items = JsonSerializer.Deserialize<List<TenantSeedData>>(json);
+        var items = JsonSerializer.Deserialize<List<TenantSeedData>>(json, SeedJsonOptions);
 
         if (items == null || items.Count == 0)
         {
@@ -114,7 +121,7 @@ public class SeedDataImporter
         }
 
         var json = await File.ReadAllTextAsync(filePath, cancellationToken);
-        var items = JsonSerializer.Deserialize<List<WarehouseSeedData>>(json);
+        var items = JsonSerializer.Deserialize<List<WarehouseSeedData>>(json, SeedJsonOptions);
 
         if (items == null || items.Count == 0)
         {
@@ -124,7 +131,7 @@ public class SeedDataImporter
 
         foreach (var item in items)
         {
-            var tenantId = Guid.Parse(item.TenantId);
+            var tenantId = ParseEntityId(item.TenantId);
             var exists = await _userDb.Warehouses.AnyAsync(w => w.Code == item.Code && w.TenantId == tenantId, cancellationToken);
             if (exists)
             {
@@ -152,7 +159,7 @@ public class SeedDataImporter
         }
 
         var json = await File.ReadAllTextAsync(filePath, cancellationToken);
-        var items = JsonSerializer.Deserialize<List<UserSeedData>>(json);
+        var items = JsonSerializer.Deserialize<List<UserSeedData>>(json, SeedJsonOptions);
 
         if (items == null || items.Count == 0)
         {
@@ -189,7 +196,7 @@ public class SeedDataImporter
         }
 
         var json = await File.ReadAllTextAsync(filePath, cancellationToken);
-        var items = JsonSerializer.Deserialize<List<MembershipSeedData>>(json);
+        var items = JsonSerializer.Deserialize<List<MembershipSeedData>>(json, SeedJsonOptions);
 
         if (items == null || items.Count == 0)
         {
@@ -199,9 +206,9 @@ public class SeedDataImporter
 
         foreach (var item in items)
         {
-            var tenantId = Guid.Parse(item.TenantId);
-            var warehouseId = Guid.Parse(item.WarehouseId);
-            var userId = Guid.Parse(item.UserId);
+            var tenantId = ParseEntityId(item.TenantId);
+            var warehouseId = ParseEntityId(item.WarehouseId);
+            var userId = ParseEntityId(item.UserId);
 
             var exists = await _userDb.Memberships.AnyAsync(
                 m => m.TenantId == tenantId && m.WarehouseId == warehouseId && m.UserId == userId,
@@ -233,7 +240,7 @@ public class SeedDataImporter
         }
 
         var json = await File.ReadAllTextAsync(filePath, cancellationToken);
-        var items = JsonSerializer.Deserialize<List<ModelProviderSeedData>>(json);
+        var items = JsonSerializer.Deserialize<List<ModelProviderSeedData>>(json, SeedJsonOptions);
 
         if (items == null || items.Count == 0)
         {
@@ -282,7 +289,7 @@ public class SeedDataImporter
         }
 
         var json = await File.ReadAllTextAsync(filePath, cancellationToken);
-        var items = JsonSerializer.Deserialize<List<ModelProfileSeedData>>(json);
+        var items = JsonSerializer.Deserialize<List<ModelProfileSeedData>>(json, SeedJsonOptions);
 
         if (items == null || items.Count == 0)
         {
@@ -330,12 +337,23 @@ public class SeedDataImporter
 
     private static void SetEntityId(object entity, string id)
     {
-        var guidId = Guid.Parse(id);
+        var guidId = ParseEntityId(id);
         var idProperty = entity.GetType().GetProperty("Id");
         if (idProperty != null && idProperty.CanWrite)
         {
             idProperty.SetValue(entity, guidId);
         }
+    }
+
+    private static Guid ParseEntityId(string id)
+    {
+        if (Guid.TryParse(id, out var guid))
+        {
+            return guid;
+        }
+
+        var bytes = MD5.HashData(Encoding.UTF8.GetBytes(id));
+        return new Guid(bytes);
     }
 
     private record TenantSeedData(string Id, string Code, string Name, string Status);

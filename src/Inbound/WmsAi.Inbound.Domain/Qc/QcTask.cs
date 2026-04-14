@@ -43,10 +43,11 @@ public sealed class QcTask : WarehouseScopedAggregateRoot
 
     public Guid? QcDecisionId { get; private set; }
 
-    public void Finalize(Guid qcDecisionId, string decisionStatus)
+    public void Finalize(Guid qcDecisionId, string decisionStatus, string decisionSource)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(qcDecisionId, Guid.Empty);
         ArgumentException.ThrowIfNullOrWhiteSpace(decisionStatus);
+        ArgumentException.ThrowIfNullOrWhiteSpace(decisionSource);
 
         if (QcDecisionId.HasValue)
         {
@@ -61,6 +62,6 @@ public sealed class QcTask : WarehouseScopedAggregateRoot
             _ => QcTaskStatus.Completed
         };
 
-        RaiseDomainEvent(new QcDecisionFinalizedEvent(Id, qcDecisionId, decisionStatus));
+        RaiseDomainEvent(new QcDecisionFinalizedEvent(Id, qcDecisionId, TenantId, WarehouseId, decisionStatus, decisionSource));
     }
 }

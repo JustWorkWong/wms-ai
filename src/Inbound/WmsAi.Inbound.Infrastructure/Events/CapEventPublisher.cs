@@ -65,12 +65,12 @@ public sealed class CapEventPublisher(ICapPublisher capPublisher, DomainEventDis
                     new QcDecisionFinalizedV1(
                         e.EventId,
                         e.OccurredAt,
-                        string.Empty, // TenantId - not available in domain event
-                        string.Empty, // WarehouseId - not available in domain event
+                        e.TenantId,
+                        e.WarehouseId,
                         e.QcTaskId,
                         e.QcDecisionId,
                         e.DecisionStatus,
-                        string.Empty), // DecisionSource - not available in domain event
+                        e.DecisionSource),
                     cancellationToken: cancellationToken);
                 break;
         }

@@ -5,3 +5,28 @@ obj/
 node_modules/
 dist/
 coverage/
+
+# IDE
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Local data directories
+**/minio-data/
+**/nacos-data/
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env.local
+.env.*.local
+
+# Local configuration overrides (never commit secrets)
+**/appsettings.Development.json
+**/appsettings.Local.json
+secrets.json

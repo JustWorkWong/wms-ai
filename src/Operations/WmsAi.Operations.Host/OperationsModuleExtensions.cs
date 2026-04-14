@@ -15,7 +15,7 @@ public static class OperationsModuleExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // Get connection strings
+        // 读取连接串
         var userDbConnection = configuration.GetConnectionString("UserDb")
             ?? "Host=localhost;Database=UserDb;Username=postgres;Password=postgres";
         var businessDbConnection = configuration.GetConnectionString("BusinessDb")
@@ -23,9 +23,9 @@ public static class OperationsModuleExtensions
         var aiDbConnection = configuration.GetConnectionString("AiDb")
             ?? "Host=localhost;Database=AiDb;Username=postgres;Password=postgres";
         var hangfireConnection = configuration.GetConnectionString("HangfireDb")
-            ?? userDbConnection; // Use UserDb for Hangfire storage
+            ?? userDbConnection; // 开发期直接复用 UserDb 存储 Hangfire 元数据
 
-        // Add DbContexts (read-only access to all three databases)
+        // 注册三个业务库上下文
         services.AddSingleton<VersionedEntitySaveChangesInterceptor>();
 
         services.AddDbContext<UserDbContext>((serviceProvider, options) =>
@@ -46,7 +46,7 @@ public static class OperationsModuleExtensions
             options.AddInterceptors(serviceProvider.GetRequiredService<VersionedEntitySaveChangesInterceptor>());
         });
 
-        // Add Hangfire
+        // 注册 Hangfire
         services.AddHangfire(config =>
         {
             config.UsePostgreSqlStorage(options =>
@@ -63,12 +63,12 @@ public static class OperationsModuleExtensions
             options.ServerName = "WmsAi.Operations";
         });
 
-        // Add services
+        // 注册启动阶段需要的后台服务
         services.AddHostedService<StartupBootstrapper>();
         services.AddHostedService<JobScheduler>();
         services.AddScoped<SeedDataImporter>();
 
-        // Add jobs
+        // 注册作业处理器
         services.AddScoped<Jobs.ScanPendingAiRunsJob>();
         services.AddScoped<Jobs.BuildDailyQcMetricsJob>();
         services.AddScoped<Jobs.CleanupExpiredSessionsJob>();
@@ -80,16 +80,15 @@ public static class OperationsModuleExtensions
         this IConfigurationBuilder builder,
         IConfiguration configuration)
     {
-        // Nacos configuration is optional and disabled by default
-        // To enable: set Nacos:Enabled = true in appsettings.json
+        // Nacos 配置在本地开发环境默认关闭
+        // 如需启用，请在 appsettings.json 中设置 Nacos:Enabled = true
         var nacosEnabled = configuration.GetValue<bool>("Nacos:Enabled", false);
         if (!nacosEnabled)
         {
             return builder;
         }
 
-        // TODO: Implement Nacos configuration when needed
-        // Requires nacos-sdk-csharp.AspNetCore package
+        // TODO: 需要时再接入 Nacos SDK
 
         return builder;
     }

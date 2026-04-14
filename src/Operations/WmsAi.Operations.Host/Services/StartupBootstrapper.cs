@@ -24,12 +24,12 @@ public class StartupBootstrapper : IHostedService
         {
             await using var scope = _serviceProvider.CreateAsyncScope();
 
-            // Apply migrations in order (respecting dependencies)
+            // 按依赖顺序初始化数据库结构
             await ApplyMigrationsAsync<UserDbContext>(scope, "UserDb", cancellationToken);
             await ApplyMigrationsAsync<BusinessDbContext>(scope, "BusinessDb", cancellationToken);
             await ApplyMigrationsAsync<AiDbContext>(scope, "AiDb", cancellationToken);
 
-            // Load seed data
+            // 导入演示数据
             await LoadSeedDataAsync(scope, cancellationToken);
 
             _logger.LogInformation("Database bootstrap completed successfully");
