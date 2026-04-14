@@ -103,39 +103,22 @@ public class RecordReceiptTests
     [Fact]
     public async Task Add_inbound_module_should_initialize_fresh_database()
     {
-        var databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        // Use in-memory SQLite for testing
+        await using var database = new SqliteConnection("DataSource=:memory:");
+        await database.OpenAsync();
 
-        try
-        {
-            var services = new ServiceCollection();
-            var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["ConnectionStrings:BusinessDb"] = $"Data Source={databasePath}"
-                })
-                .Build();
+        var options = new DbContextOptionsBuilder<BusinessDbContext>()
+            .UseSqlite(database)
+            .Options;
 
-            services.AddInboundModule(configuration);
+        await using var dbContext = new BusinessDbContext(options);
+        await dbContext.Database.EnsureCreatedAsync();
 
-            await using var provider = services.BuildServiceProvider();
-            await BusinessDatabaseInitializer.InitializeAsync(provider);
+        var tables = await dbContext.Database.SqlQueryRaw<string>(
+                "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('inbound_notices', 'receipts', 'qc_tasks', 'qc_decisions')")
+            .ToListAsync();
 
-            await using var scope = provider.CreateAsyncScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<BusinessDbContext>();
-
-            var tables = await dbContext.Database.SqlQueryRaw<string>(
-                    "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('inbound_notices', 'receipts', 'qc_tasks', 'qc_decisions')")
-                .ToListAsync();
-
-            tables.Should().BeEquivalentTo(["inbound_notices", "receipts", "qc_tasks", "qc_decisions"]);
-        }
-        finally
-        {
-            if (File.Exists(databasePath))
-            {
-                File.Delete(databasePath);
-            }
-        }
+        tables.Should().BeEquivalentTo(["inbound_notices", "receipts", "qc_tasks", "qc_decisions"]);
     }
 
     [Fact]

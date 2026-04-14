@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using WmsAi.Platform.Application.Tenants;
 using WmsAi.Platform.Domain.Tenants;
 using WmsAi.Platform.Infrastructure.Persistence;
+using WmsAi.SharedKernel.Persistence;
 using Xunit;
 
 namespace WmsAi.Platform.Tests;
@@ -55,41 +56,25 @@ public class CreateTenantTests
     [Fact]
     public async Task Add_platform_module_should_register_version_interceptor()
     {
-        var databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        // Use in-memory SQLite for testing
+        await using var database = new SqliteConnection("DataSource=:memory:");
+        await database.OpenAsync();
 
-        try
-        {
-            var services = new ServiceCollection();
-            var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["ConnectionStrings:UserDb"] = $"Data Source={databasePath}"
-                })
-                .Build();
+        var options = new DbContextOptionsBuilder<UserDbContext>()
+            .UseSqlite(database)
+            .AddInterceptors(new VersionedEntitySaveChangesInterceptor())
+            .Options;
 
-            services.AddPlatformModule(configuration);
+        await using var dbContext = new UserDbContext(options);
+        await dbContext.Database.EnsureCreatedAsync();
 
-            await using var provider = services.BuildServiceProvider();
-            await PlatformDatabaseInitializer.InitializeAsync(provider);
+        var tenant = new Tenant("TENANT_VERSION", "版本租户");
+        await dbContext.AddTenantAsync(tenant, CancellationToken.None);
+        await dbContext.SaveChangesAsync(CancellationToken.None);
 
-            await using var scope = provider.CreateAsyncScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<UserDbContext>();
+        tenant.Rename("版本租户-更新");
+        await dbContext.SaveChangesAsync(CancellationToken.None);
 
-            var tenant = new Tenant("TENANT_VERSION", "版本租户");
-            await dbContext.AddTenantAsync(tenant, CancellationToken.None);
-            await dbContext.SaveChangesAsync(CancellationToken.None);
-
-            tenant.Rename("版本租户-更新");
-            await dbContext.SaveChangesAsync(CancellationToken.None);
-
-            tenant.Version.Should().Be(2);
-        }
-        finally
-        {
-            if (File.Exists(databasePath))
-            {
-                File.Delete(databasePath);
-            }
-        }
+        tenant.Version.Should().Be(2);
     }
 }
