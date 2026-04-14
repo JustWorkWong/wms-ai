@@ -52,48 +52,19 @@ public sealed partial class LoadQcTaskExecutor : Executor
             if (qcTask == null)
             {
                 _logger.LogWarning("质检任务不存在: QcTaskId={QcTaskId}", state.QcTaskId);
-                return new QcInspectionState
-                {
-                    QcTaskId = state.QcTaskId,
-                    TenantId = state.TenantId,
-                    WarehouseId = state.WarehouseId,
-                    UserId = state.UserId,
-                    WorkflowRunId = state.WorkflowRunId,
-                    Status = "Failed",
-                    ErrorMessage = $"质检任务不存在: {state.QcTaskId}"
-                };
+                return state.WithError($"质检任务不存在: {state.QcTaskId}");
             }
 
             _logger.LogInformation(
                 "成功加载质检任务: QcTaskId={QcTaskId}, SkuCode={SkuCode}, Quantity={Quantity}",
                 qcTask.QcTaskId, qcTask.SkuCode, qcTask.Quantity);
 
-            return new QcInspectionState
-            {
-                QcTaskId = state.QcTaskId,
-                TenantId = state.TenantId,
-                WarehouseId = state.WarehouseId,
-                UserId = state.UserId,
-                WorkflowRunId = state.WorkflowRunId,
-                QcTask = qcTask,
-                Evidence = state.Evidence,
-                QualityRules = state.QualityRules,
-                Status = "QcTaskLoaded"
-            };
+            return state.With(qcTask: qcTask, status: "QcTaskLoaded");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "加载质检任务失败: QcTaskId={QcTaskId}", state.QcTaskId);
-            return new QcInspectionState
-            {
-                QcTaskId = state.QcTaskId,
-                TenantId = state.TenantId,
-                WarehouseId = state.WarehouseId,
-                UserId = state.UserId,
-                WorkflowRunId = state.WorkflowRunId,
-                Status = "Failed",
-                ErrorMessage = $"加载质检任务失败: {ex.Message}"
-            };
+            return state.WithError($"加载质检任务失败: {ex.Message}");
         }
     }
 }

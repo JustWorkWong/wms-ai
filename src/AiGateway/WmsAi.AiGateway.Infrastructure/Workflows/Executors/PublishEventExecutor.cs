@@ -70,23 +70,7 @@ public sealed partial class PublishEventExecutor : Executor
                 state.QcTaskId,
                 @event.Decision);
 
-            return new QcInspectionState
-            {
-                QcTaskId = state.QcTaskId,
-                TenantId = state.TenantId,
-                WarehouseId = state.WarehouseId,
-                UserId = state.UserId,
-                WorkflowRunId = state.WorkflowRunId,
-                QcTask = state.QcTask,
-                Evidence = state.Evidence,
-                QualityRules = state.QualityRules,
-                EvidenceGapAnalysis = state.EvidenceGapAnalysis,
-                InspectionDecision = state.InspectionDecision,
-                RequiresHumanApproval = state.RequiresHumanApproval,
-                HumanApproval = state.HumanApproval,
-                FinalDecision = state.FinalDecision,
-                Status = "EventPublished"
-            };
+            return state.With(status: "EventPublished");
         }
         catch (Exception ex)
         {
@@ -95,24 +79,7 @@ public sealed partial class PublishEventExecutor : Executor
                 "发布事件失败: QcTaskId={QcTaskId}",
                 state.QcTaskId);
 
-            return new QcInspectionState
-            {
-                QcTaskId = state.QcTaskId,
-                TenantId = state.TenantId,
-                WarehouseId = state.WarehouseId,
-                UserId = state.UserId,
-                WorkflowRunId = state.WorkflowRunId,
-                QcTask = state.QcTask,
-                Evidence = state.Evidence,
-                QualityRules = state.QualityRules,
-                EvidenceGapAnalysis = state.EvidenceGapAnalysis,
-                InspectionDecision = state.InspectionDecision,
-                RequiresHumanApproval = state.RequiresHumanApproval,
-                HumanApproval = state.HumanApproval,
-                FinalDecision = state.FinalDecision,
-                Status = "Failed",
-                ErrorMessage = $"发布事件失败: {ex.Message}"
-            };
+            return state.WithError($"发布事件失败: {ex.Message}");
         }
     }
 }

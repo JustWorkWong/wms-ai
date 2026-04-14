@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.Agents.AI.Workflows;
 using Microsoft.Agents.AI.Workflows.Checkpointing;
+using Microsoft.Agents.AI.Workflows.InProc;
 using Microsoft.AspNetCore.Mvc;
 using WmsAi.AiGateway.Application.Workflows;
 using WmsAi.AiGateway.Domain.Workflows;
@@ -16,7 +17,8 @@ public static class WorkflowEndpoints
     public static void MapWorkflowEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/api/ai/workflows")
-            .WithTags("Workflows");
+            .WithTags("Workflows")
+            .RequireAuthorization(); // 添加认证要求
 
         group.MapPost("/{workflowId:guid}/resume", ResumeWorkflow)
             .WithName("ResumeWorkflow")
@@ -81,70 +83,135 @@ public static class WorkflowEndpoints
                 return Results.BadRequest(new { Error = "No checkpoint found for this workflow" });
             }
 
-            // 4. 恢复 Checkpoint 数据
-            var checkpointData = await checkpointStore.RetrieveCheckpointAsync(sessionId, latestCheckpoint);
+            // 4. 构建 CheckpointInfo 和 CheckpointManager
+            var checkpointInfo = new CheckpointInfo(
+                sessionId: sessionId,
+                checkpointId: latestCheckpoint.CheckpointId);
+
+            var checkpointManager = CheckpointManager.CreateJson(checkpointStore, new JsonSerializerOptions());
 
             logger.LogInformation(
                 "Loaded checkpoint {CheckpointId} for workflow {WorkflowId}",
                 latestCheckpoint.CheckpointId, workflowId);
 
-            // 5. 反序列化 State
-            var state = JsonSerializer.Deserialize<QcInspectionState>(checkpointData.GetRawText());
-            if (state == null)
-            {
-                logger.LogError("Failed to deserialize checkpoint state for workflow {WorkflowId}", workflowId);
-                return Results.Problem("Failed to deserialize checkpoint state");
-            }
-
-            // 6. 更新 State 添加人工审批响应
-            var updatedState = new QcInspectionState
-            {
-                QcTaskId = state.QcTaskId,
-                TenantId = state.TenantId,
-                WarehouseId = state.WarehouseId,
-                UserId = state.UserId,
-                WorkflowRunId = state.WorkflowRunId,
-                QcTask = state.QcTask,
-                Evidence = state.Evidence,
-                QualityRules = state.QualityRules,
-                EvidenceGapAnalysis = state.EvidenceGapAnalysis,
-                InspectionDecision = state.InspectionDecision,
-                RequiresHumanApproval = state.RequiresHumanApproval,
-                HumanApproval = approvalResponse,
-                FinalDecision = state.FinalDecision,
-                Status = "Running",
-                ErrorMessage = state.ErrorMessage
-            };
-
-            // 7. 重新构建 Workflow
+            // 5. 重新构建 Workflow
             var workflow = await workflowFactory.BuildAsync(cancellationToken);
 
-            // 8. 恢复 Workflow 执行
-            // 注意：MAF Workflow 的恢复机制需要通过 RequestPort 提供审批响应
-            // 这里需要找到 HumanApproval RequestPort 并提供响应
-
-            // TODO: 实际的 Workflow 恢复执行逻辑
-            // 根据 MAF API，可能需要：
-            // - workflow.ResumeFromCheckpoint(checkpointData, approvalResponse)
-            // - 或通过 RequestPort.ProvideResponse() 方法
-
-            logger.LogWarning(
-                "Workflow resume execution not yet fully implemented. WorkflowId={WorkflowId}",
-                workflowId);
-
-            // 9. 更新 Workflow Run 状态
+            // 6. 更新 Workflow Run 状态为 Running
             workflowRun.Resume();
             await workflowRunRepository.UpdateAsync(workflowRun, cancellationToken);
 
             logger.LogInformation(
-                "Workflow {WorkflowId} resumed successfully with decision: {Decision}",
+                "Resuming workflow from checkpoint {CheckpointId}",
+                latestCheckpoint.CheckpointId);
+
+            // 7. 使用 ResumeStreamingAsync 恢复 Workflow
+            var streamingRun = await InProcessExecution.ResumeStreamingAsync(
+                workflow,
+                checkpointInfo,
+                checkpointManager,
+                cancellationToken);
+
+            // 8. 发送人工审批响应
+            // 需要从 RequestInfoEvent 中获取 ExternalRequest 信息
+            // 这里暂时使用简化的方式，假设 RequestId 存储在数据库中
+            var externalResponse = new ExternalResponse(
+                PortInfo: new RequestPortInfo(
+                    RequestType: new TypeId(typeof(ApprovalRequest)),
+                    ResponseType: new TypeId(typeof(ApprovalResponse)),
+                    PortId: "HumanApproval"),
+                RequestId: "approval-request",
+                Data: new PortableValue(approvalResponse));
+
+            await streamingRun.SendResponseAsync(externalResponse);
+
+            logger.LogInformation(
+                "Sent approval response to workflow {WorkflowId}: {Decision}",
                 workflowId, approvalResponse.Decision);
+
+            // 9. 监听事件流直到完成或再次暂停
+            await foreach (var evt in streamingRun.WatchStreamAsync(cancellationToken))
+            {
+                logger.LogInformation(
+                    "Workflow {WorkflowId} event: {EventType}",
+                    workflowId, evt.GetType().Name);
+
+                switch (evt)
+                {
+                    case ExecutorCompletedEvent executorCompleted:
+                        logger.LogInformation(
+                            "Executor completed: {ExecutorId}",
+                            executorCompleted.ExecutorId);
+                        break;
+
+                    case RequestInfoEvent requestInfo:
+                        // Workflow 再次暂停，等待人工审批
+                        logger.LogInformation(
+                            "Workflow {WorkflowId} paused again, waiting for approval",
+                            workflowId);
+
+                        workflowRun.Pause();
+                        await workflowRunRepository.UpdateAsync(workflowRun, cancellationToken);
+
+                        return Results.Ok(new WorkflowResumeResponse
+                        {
+                            WorkflowId = workflowId,
+                            Status = "Paused",
+                            Message = "Workflow paused again, waiting for another approval",
+                            ApprovalDecision = approvalResponse.Decision,
+                            ResumedAt = DateTimeOffset.UtcNow
+                        });
+
+                    case WorkflowOutputEvent outputEvent:
+                        // Workflow 完成
+                        logger.LogInformation(
+                            "Workflow {WorkflowId} completed successfully",
+                            workflowId);
+
+                        workflowRun.Complete(JsonSerializer.Serialize(outputEvent.Data));
+                        await workflowRunRepository.UpdateAsync(workflowRun, cancellationToken);
+
+                        return Results.Ok(new WorkflowResumeResponse
+                        {
+                            WorkflowId = workflowId,
+                            Status = "Completed",
+                            Message = "Workflow completed successfully",
+                            ApprovalDecision = approvalResponse.Decision,
+                            ResumedAt = DateTimeOffset.UtcNow
+                        });
+
+                    case ExecutorFailedEvent failedEvent:
+                        // Workflow 失败
+                        var exception = failedEvent.Data as Exception;
+                        logger.LogError(
+                            exception,
+                            "Workflow {WorkflowId} failed",
+                            workflowId);
+
+                        workflowRun.Fail(exception?.Message ?? "Unknown error");
+                        await workflowRunRepository.UpdateAsync(workflowRun, cancellationToken);
+
+                        return Results.Ok(new WorkflowResumeResponse
+                        {
+                            WorkflowId = workflowId,
+                            Status = "Failed",
+                            Message = $"Workflow failed: {exception?.Message}",
+                            ApprovalDecision = approvalResponse.Decision,
+                            ResumedAt = DateTimeOffset.UtcNow
+                        });
+                }
+            }
+
+            // 如果事件流结束但没有明确的完成/失败事件
+            logger.LogWarning(
+                "Workflow {WorkflowId} event stream ended without completion event",
+                workflowId);
 
             return Results.Ok(new WorkflowResumeResponse
             {
                 WorkflowId = workflowId,
-                Status = "Resumed",
-                Message = "Workflow resumed successfully",
+                Status = "Running",
+                Message = "Workflow resumed and running",
                 ApprovalDecision = approvalResponse.Decision,
                 ResumedAt = DateTimeOffset.UtcNow
             });

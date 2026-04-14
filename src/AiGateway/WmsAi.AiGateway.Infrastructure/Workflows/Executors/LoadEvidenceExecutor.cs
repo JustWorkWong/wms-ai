@@ -53,52 +53,19 @@ public sealed partial class LoadEvidenceExecutor : Executor
             if (evidence == null || evidence.Count == 0)
             {
                 _logger.LogWarning("未找到证据资产: QcTaskId={QcTaskId}", state.QcTaskId);
-                return new QcInspectionState
-                {
-                    QcTaskId = state.QcTaskId,
-                    TenantId = state.TenantId,
-                    WarehouseId = state.WarehouseId,
-                    UserId = state.UserId,
-                    WorkflowRunId = state.WorkflowRunId,
-                    QcTask = state.QcTask,
-                    Evidence = [],
-                    QualityRules = state.QualityRules,
-                    Status = "EvidenceLoaded"
-                };
+                return state.With(evidence: [], status: "EvidenceLoaded");
             }
 
             _logger.LogInformation(
                 "成功加载证据资产: QcTaskId={QcTaskId}, Count={Count}",
                 state.QcTaskId, evidence.Count);
 
-            return new QcInspectionState
-            {
-                QcTaskId = state.QcTaskId,
-                TenantId = state.TenantId,
-                WarehouseId = state.WarehouseId,
-                UserId = state.UserId,
-                WorkflowRunId = state.WorkflowRunId,
-                QcTask = state.QcTask,
-                Evidence = evidence,
-                QualityRules = state.QualityRules,
-                Status = "EvidenceLoaded"
-            };
+            return state.With(evidence: evidence, status: "EvidenceLoaded");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "加载证据资产失败: QcTaskId={QcTaskId}", state.QcTaskId);
-            return new QcInspectionState
-            {
-                QcTaskId = state.QcTaskId,
-                TenantId = state.TenantId,
-                WarehouseId = state.WarehouseId,
-                UserId = state.UserId,
-                WorkflowRunId = state.WorkflowRunId,
-                QcTask = state.QcTask,
-                QualityRules = state.QualityRules,
-                Status = "Failed",
-                ErrorMessage = $"加载证据资产失败: {ex.Message}"
-            };
+            return state.WithError($"加载证据资产失败: {ex.Message}");
         }
     }
 }

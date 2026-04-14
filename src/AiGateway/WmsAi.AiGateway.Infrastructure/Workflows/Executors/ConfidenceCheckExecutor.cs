@@ -10,7 +10,6 @@ namespace WmsAi.AiGateway.Infrastructure.Workflows.Executors;
 public sealed partial class ConfidenceCheckExecutor : Executor
 {
     private readonly ILogger<ConfidenceCheckExecutor> _logger;
-    private const decimal ConfidenceThreshold = 0.8m;
 
     public ConfidenceCheckExecutor(ILogger<ConfidenceCheckExecutor> logger)
         : base("ConfidenceCheck")
@@ -39,48 +38,22 @@ public sealed partial class ConfidenceCheckExecutor : Executor
                 "质检决策结果为空: QcTaskId={QcTaskId}",
                 state.QcTaskId);
 
-            return Task.FromResult(new QcInspectionState
-            {
-                QcTaskId = state.QcTaskId,
-                TenantId = state.TenantId,
-                WarehouseId = state.WarehouseId,
-                UserId = state.UserId,
-                WorkflowRunId = state.WorkflowRunId,
-                QcTask = state.QcTask,
-                Evidence = state.Evidence,
-                QualityRules = state.QualityRules,
-                EvidenceGapAnalysis = state.EvidenceGapAnalysis,
-                InspectionDecision = state.InspectionDecision,
-                RequiresHumanApproval = true,
-                Status = "ConfidenceCheckFailed",
-                ErrorMessage = "质检决策结果为空"
-            });
+            return Task.FromResult(state.With(
+                requiresHumanApproval: true,
+                status: "ConfidenceCheckFailed",
+                errorMessage: "质检决策结果为空"));
         }
 
         var confidenceScore = state.InspectionDecision.ConfidenceScore;
-        var requiresHumanApproval = confidenceScore < ConfidenceThreshold;
+        var requiresHumanApproval = confidenceScore < WorkflowConstants.HighConfidenceThreshold;
 
         _logger.LogInformation(
             "置信度检查完成: QcTaskId={QcTaskId}, ConfidenceScore={ConfidenceScore}, Threshold={Threshold}, RequiresHumanApproval={RequiresHumanApproval}",
             state.QcTaskId,
             confidenceScore,
-            ConfidenceThreshold,
+            WorkflowConstants.HighConfidenceThreshold,
             requiresHumanApproval);
 
-        return Task.FromResult(new QcInspectionState
-        {
-            QcTaskId = state.QcTaskId,
-            TenantId = state.TenantId,
-            WarehouseId = state.WarehouseId,
-            UserId = state.UserId,
-            WorkflowRunId = state.WorkflowRunId,
-            QcTask = state.QcTask,
-            Evidence = state.Evidence,
-            QualityRules = state.QualityRules,
-            EvidenceGapAnalysis = state.EvidenceGapAnalysis,
-            InspectionDecision = state.InspectionDecision,
-            RequiresHumanApproval = requiresHumanApproval,
-            Status = "ConfidenceChecked"
-        });
+        return Task.FromResult(state.With(requiresHumanApproval: requiresHumanApproval, status: "ConfidenceChecked"));
     }
 }

@@ -53,8 +53,8 @@ public sealed partial class InspectionDecisionAgentExecutor : Executor
                 messages,
                 new ChatOptions
                 {
-                    Temperature = 0.2f,
-                    MaxOutputTokens = 1500
+                    Temperature = WorkflowConstants.InspectionDecisionTemperature,
+                    MaxOutputTokens = WorkflowConstants.InspectionDecisionMaxTokens
                 },
                 cancellationToken);
 
@@ -66,20 +66,7 @@ public sealed partial class InspectionDecisionAgentExecutor : Executor
 
             var decisionResult = ParseAiResponse(aiContent);
 
-            return new QcInspectionState
-            {
-                QcTaskId = state.QcTaskId,
-                TenantId = state.TenantId,
-                WarehouseId = state.WarehouseId,
-                UserId = state.UserId,
-                WorkflowRunId = state.WorkflowRunId,
-                QcTask = state.QcTask,
-                Evidence = state.Evidence,
-                QualityRules = state.QualityRules,
-                EvidenceGapAnalysis = state.EvidenceGapAnalysis,
-                InspectionDecision = decisionResult,
-                Status = "DecisionMade"
-            };
+            return state.With(inspectionDecision: decisionResult, status: "DecisionMade");
         }
         catch (Exception ex)
         {
@@ -88,20 +75,7 @@ public sealed partial class InspectionDecisionAgentExecutor : Executor
                 "质检决策失败: QcTaskId={QcTaskId}",
                 state.QcTaskId);
 
-            return new QcInspectionState
-            {
-                QcTaskId = state.QcTaskId,
-                TenantId = state.TenantId,
-                WarehouseId = state.WarehouseId,
-                UserId = state.UserId,
-                WorkflowRunId = state.WorkflowRunId,
-                QcTask = state.QcTask,
-                Evidence = state.Evidence,
-                QualityRules = state.QualityRules,
-                EvidenceGapAnalysis = state.EvidenceGapAnalysis,
-                Status = "Failed",
-                ErrorMessage = $"质检决策失败: {ex.Message}"
-            };
+            return state.WithError($"质检决策失败: {ex.Message}");
         }
     }
 
@@ -179,43 +153,6 @@ public sealed partial class InspectionDecisionAgentExecutor : Executor
 
     private InspectionDecisionResult ParseAiResponse(string aiContent)
     {
-        try
-        {
-            // 提取 JSON（处理 markdown 代码块）
-            var jsonContent = aiContent.Trim();
-            if (jsonContent.StartsWith("```json"))
-            {
-                jsonContent = jsonContent.Replace("```json", "").Replace("```", "").Trim();
-            }
-            else if (jsonContent.StartsWith("```"))
-            {
-                jsonContent = jsonContent.Replace("```", "").Trim();
-            }
-
-            var result = JsonSerializer.Deserialize<InspectionDecisionResult>(
-                jsonContent,
-                new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
-
-            if (result == null)
-            {
-                throw new InvalidOperationException("AI 返回的 JSON 解析为 null");
-            }
-
-            return result;
-        }
-        catch (JsonException ex)
-        {
-            _logger.LogError(
-                ex,
-                "解析 AI 响应失败: {Content}",
-                aiContent);
-
-            throw new InvalidOperationException(
-                $"无法解析 AI 响应为 InspectionDecisionResult: {ex.Message}",
-                ex);
-        }
+        return AiResponseParser.Parse<InspectionDecisionResult>(aiContent, _logger);
     }
 }

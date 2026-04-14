@@ -336,6 +336,7 @@ public sealed class AiDbContext(DbContextOptions<AiDbContext> options) : DbConte
             builder.Property(e => e.ParentCheckpointId).HasMaxLength(128);
             builder.Property(e => e.CheckpointData).HasColumnType("jsonb").IsRequired();
             builder.Property(e => e.CreatedAt).IsRequired();
+            builder.HasIndex(e => e.SessionId);
             builder.HasIndex(e => new { e.SessionId, e.CreatedAt });
             builder.HasIndex(e => e.ParentCheckpointId);
         });

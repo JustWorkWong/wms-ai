@@ -48,18 +48,7 @@ public sealed partial class LoadRulesExecutor : Executor
             if (string.IsNullOrEmpty(skuCode))
             {
                 _logger.LogWarning("SKU 编码为空,无法加载质量规则: QcTaskId={QcTaskId}", state.QcTaskId);
-                return new QcInspectionState
-                {
-                    QcTaskId = state.QcTaskId,
-                    TenantId = state.TenantId,
-                    WarehouseId = state.WarehouseId,
-                    UserId = state.UserId,
-                    WorkflowRunId = state.WorkflowRunId,
-                    QcTask = state.QcTask,
-                    Evidence = state.Evidence,
-                    QualityRules = new Dictionary<string, object>(),
-                    Status = "RulesLoaded"
-                };
+                return state.With(qualityRules: new Dictionary<string, object>(), status: "RulesLoaded");
             }
 
             var rules = await businessApiClient.GetAsync<Dictionary<string, object>>(
@@ -73,52 +62,19 @@ public sealed partial class LoadRulesExecutor : Executor
                 _logger.LogWarning(
                     "未找到质量规则: QcTaskId={QcTaskId}, SkuCode={SkuCode}",
                     state.QcTaskId, skuCode);
-                return new QcInspectionState
-                {
-                    QcTaskId = state.QcTaskId,
-                    TenantId = state.TenantId,
-                    WarehouseId = state.WarehouseId,
-                    UserId = state.UserId,
-                    WorkflowRunId = state.WorkflowRunId,
-                    QcTask = state.QcTask,
-                    Evidence = state.Evidence,
-                    QualityRules = new Dictionary<string, object>(),
-                    Status = "RulesLoaded"
-                };
+                return state.With(qualityRules: new Dictionary<string, object>(), status: "RulesLoaded");
             }
 
             _logger.LogInformation(
                 "成功加载质量规则: QcTaskId={QcTaskId}, SkuCode={SkuCode}, RuleCount={Count}",
                 state.QcTaskId, skuCode, rules.Count);
 
-            return new QcInspectionState
-            {
-                QcTaskId = state.QcTaskId,
-                TenantId = state.TenantId,
-                WarehouseId = state.WarehouseId,
-                UserId = state.UserId,
-                WorkflowRunId = state.WorkflowRunId,
-                QcTask = state.QcTask,
-                Evidence = state.Evidence,
-                QualityRules = rules,
-                Status = "RulesLoaded"
-            };
+            return state.With(qualityRules: rules, status: "RulesLoaded");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "加载质量规则失败: QcTaskId={QcTaskId}", state.QcTaskId);
-            return new QcInspectionState
-            {
-                QcTaskId = state.QcTaskId,
-                TenantId = state.TenantId,
-                WarehouseId = state.WarehouseId,
-                UserId = state.UserId,
-                WorkflowRunId = state.WorkflowRunId,
-                QcTask = state.QcTask,
-                Evidence = state.Evidence,
-                Status = "Failed",
-                ErrorMessage = $"加载质量规则失败: {ex.Message}"
-            };
+            return state.WithError($"加载质量规则失败: {ex.Message}");
         }
     }
 }

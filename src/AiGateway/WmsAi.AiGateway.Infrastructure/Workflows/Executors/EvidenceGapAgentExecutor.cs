@@ -53,8 +53,8 @@ public sealed partial class EvidenceGapAgentExecutor : Executor
                 messages,
                 new ChatOptions
                 {
-                    Temperature = 0.3f,
-                    MaxOutputTokens = 1000
+                    Temperature = WorkflowConstants.EvidenceGapTemperature,
+                    MaxOutputTokens = WorkflowConstants.EvidenceGapMaxTokens
                 },
                 cancellationToken);
 
@@ -66,19 +66,7 @@ public sealed partial class EvidenceGapAgentExecutor : Executor
 
             var analysisResult = ParseAiResponse(aiContent);
 
-            return new QcInspectionState
-            {
-                QcTaskId = state.QcTaskId,
-                TenantId = state.TenantId,
-                WarehouseId = state.WarehouseId,
-                UserId = state.UserId,
-                WorkflowRunId = state.WorkflowRunId,
-                QcTask = state.QcTask,
-                Evidence = state.Evidence,
-                QualityRules = state.QualityRules,
-                EvidenceGapAnalysis = analysisResult,
-                Status = "EvidenceAnalyzed"
-            };
+            return state.With(evidenceGapAnalysis: analysisResult, status: "EvidenceAnalyzed");
         }
         catch (Exception ex)
         {
@@ -87,19 +75,7 @@ public sealed partial class EvidenceGapAgentExecutor : Executor
                 "证据缺口分析失败: QcTaskId={QcTaskId}",
                 state.QcTaskId);
 
-            return new QcInspectionState
-            {
-                QcTaskId = state.QcTaskId,
-                TenantId = state.TenantId,
-                WarehouseId = state.WarehouseId,
-                UserId = state.UserId,
-                WorkflowRunId = state.WorkflowRunId,
-                QcTask = state.QcTask,
-                Evidence = state.Evidence,
-                QualityRules = state.QualityRules,
-                Status = "Failed",
-                ErrorMessage = $"证据缺口分析失败: {ex.Message}"
-            };
+            return state.WithError($"证据缺口分析失败: {ex.Message}");
         }
     }
 
@@ -157,43 +133,6 @@ public sealed partial class EvidenceGapAgentExecutor : Executor
 
     private EvidenceGapResult ParseAiResponse(string aiContent)
     {
-        try
-        {
-            // 提取 JSON（处理 markdown 代码块）
-            var jsonContent = aiContent.Trim();
-            if (jsonContent.StartsWith("```json"))
-            {
-                jsonContent = jsonContent.Replace("```json", "").Replace("```", "").Trim();
-            }
-            else if (jsonContent.StartsWith("```"))
-            {
-                jsonContent = jsonContent.Replace("```", "").Trim();
-            }
-
-            var result = JsonSerializer.Deserialize<EvidenceGapResult>(
-                jsonContent,
-                new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
-
-            if (result == null)
-            {
-                throw new InvalidOperationException("AI 返回的 JSON 解析为 null");
-            }
-
-            return result;
-        }
-        catch (JsonException ex)
-        {
-            _logger.LogError(
-                ex,
-                "解析 AI 响应失败: {Content}",
-                aiContent);
-
-            throw new InvalidOperationException(
-                $"无法解析 AI 响应为 EvidenceGapResult: {ex.Message}",
-                ex);
-        }
+        return AiResponseParser.Parse<EvidenceGapResult>(aiContent, _logger);
     }
 }

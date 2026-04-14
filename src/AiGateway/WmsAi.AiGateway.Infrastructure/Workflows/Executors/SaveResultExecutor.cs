@@ -167,22 +167,7 @@ public sealed partial class SaveResultExecutor : Executor
                 state.QcTaskId,
                 "ResultSaved");
 
-            return new QcInspectionState
-            {
-                QcTaskId = state.QcTaskId,
-                TenantId = state.TenantId,
-                WarehouseId = state.WarehouseId,
-                UserId = state.UserId,
-                WorkflowRunId = state.WorkflowRunId,
-                QcTask = state.QcTask,
-                Evidence = state.Evidence,
-                QualityRules = state.QualityRules,
-                EvidenceGapAnalysis = state.EvidenceGapAnalysis,
-                InspectionDecision = state.InspectionDecision,
-                RequiresHumanApproval = state.RequiresHumanApproval,
-                FinalDecision = state.InspectionDecision?.Decision,
-                Status = "ResultSaved"
-            };
+            return state.With(finalDecision: state.InspectionDecision?.Decision, status: "ResultSaved");
         }
         catch (Exception ex)
         {
@@ -191,22 +176,7 @@ public sealed partial class SaveResultExecutor : Executor
                 "保存结果失败: QcTaskId={QcTaskId}",
                 state.QcTaskId);
 
-            return new QcInspectionState
-            {
-                QcTaskId = state.QcTaskId,
-                TenantId = state.TenantId,
-                WarehouseId = state.WarehouseId,
-                UserId = state.UserId,
-                WorkflowRunId = state.WorkflowRunId,
-                QcTask = state.QcTask,
-                Evidence = state.Evidence,
-                QualityRules = state.QualityRules,
-                EvidenceGapAnalysis = state.EvidenceGapAnalysis,
-                InspectionDecision = state.InspectionDecision,
-                RequiresHumanApproval = state.RequiresHumanApproval,
-                Status = "Failed",
-                ErrorMessage = $"保存结果失败: {ex.Message}"
-            };
+            return state.WithError($"保存结果失败: {ex.Message}");
         }
     }
 }

@@ -15,6 +15,11 @@ public sealed class PostgresCheckpointStore : ICheckpointStore<JsonElement>
     private readonly AiDbContext _dbContext;
     private readonly ILogger<PostgresCheckpointStore> _logger;
 
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        WriteIndented = false
+    };
+
     public PostgresCheckpointStore(
         AiDbContext dbContext,
         ILogger<PostgresCheckpointStore> logger)
@@ -40,19 +45,7 @@ public sealed class PostgresCheckpointStore : ICheckpointStore<JsonElement>
             var checkpointInfo = new CheckpointInfo(sessionId, checkpointId);
 
             // 序列化 Checkpoint 数据
-            var checkpointJson = JsonSerializer.Serialize(value, new JsonSerializerOptions
-            {
-                WriteIndented = false
-            });
-
-            // 查找关联的 MafSession
-            var session = await _dbContext.MafSessions
-                .FirstOrDefaultAsync(s => s.Id.ToString() == sessionId);
-
-            if (session == null)
-            {
-                _logger.LogWarning("Session {SessionId} not found, creating checkpoint without session reference", sessionId);
-            }
+            var checkpointJson = JsonSerializer.Serialize(value, JsonOptions);
 
             // 创建 WorkflowCheckpoint 实体
             var entity = new WorkflowCheckpoint
