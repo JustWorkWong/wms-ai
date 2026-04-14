@@ -18,6 +18,7 @@ public sealed class Warehouse : AggregateRoot
         Code = code.Trim();
         Name = name.Trim();
         IsDefault = isDefault;
+        Status = WarehouseStatus.Active;
 
         RaiseDomainEvent(new WarehouseCreatedEvent(Id, TenantId, Code, Name, IsDefault));
     }
@@ -29,4 +30,6 @@ public sealed class Warehouse : AggregateRoot
     public string Name { get; private set; } = string.Empty;
 
     public bool IsDefault { get; private set; }
+
+    public WarehouseStatus Status { get; private set; }
 }

@@ -16,7 +16,7 @@ public sealed class InboundNotice : WarehouseScopedAggregateRoot
         ArgumentException.ThrowIfNullOrWhiteSpace(noticeNo);
 
         NoticeNo = noticeNo.Trim();
-        Status = "created";
+        Status = InboundNoticeStatus.Created;
 
         foreach (var line in lines)
         {
@@ -33,13 +33,13 @@ public sealed class InboundNotice : WarehouseScopedAggregateRoot
 
     public string NoticeNo { get; private set; } = string.Empty;
 
-    public string Status { get; private set; } = string.Empty;
+    public InboundNoticeStatus Status { get; private set; }
 
     public IReadOnlyCollection<InboundNoticeLine> Lines => _lines;
 
     public void MarkReceived()
     {
-        Status = "received";
+        Status = InboundNoticeStatus.Received;
     }
 }
 

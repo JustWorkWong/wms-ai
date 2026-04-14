@@ -51,7 +51,7 @@ public sealed class UserDbContext(DbContextOptions<UserDbContext> options) : DbC
             builder.HasKey(entity => entity.Id);
             builder.Property(entity => entity.Code).HasMaxLength(64);
             builder.Property(entity => entity.Name).HasMaxLength(256);
-            builder.Property(entity => entity.Status).HasMaxLength(32);
+            builder.Property(entity => entity.Status).HasConversion<string>();
             builder.HasIndex(entity => entity.Code).IsUnique();
             VersionedEntityTypeConfiguration.ApplyVersion(builder);
         });
@@ -63,6 +63,7 @@ public sealed class UserDbContext(DbContextOptions<UserDbContext> options) : DbC
             builder.Property(entity => entity.TenantId);
             builder.Property(entity => entity.Code).HasMaxLength(64);
             builder.Property(entity => entity.Name).HasMaxLength(256);
+            builder.Property(entity => entity.Status).HasConversion<string>();
             builder.HasIndex(entity => new { entity.TenantId, entity.Code }).IsUnique();
             builder.HasOne<Tenant>()
                 .WithMany()
@@ -76,7 +77,7 @@ public sealed class UserDbContext(DbContextOptions<UserDbContext> options) : DbC
             builder.ToTable("users");
             builder.HasKey(entity => entity.Id);
             builder.Property(entity => entity.LoginName).HasMaxLength(128);
-            builder.Property(entity => entity.Status).HasMaxLength(32);
+            builder.Property(entity => entity.Status).HasConversion<string>();
             builder.HasIndex(entity => entity.LoginName).IsUnique();
             VersionedEntityTypeConfiguration.ApplyVersion(builder);
         });
@@ -89,7 +90,7 @@ public sealed class UserDbContext(DbContextOptions<UserDbContext> options) : DbC
             builder.Property(entity => entity.WarehouseId);
             builder.Property(entity => entity.UserId);
             builder.Property(entity => entity.Role).HasMaxLength(64);
-            builder.Property(entity => entity.Status).HasMaxLength(32);
+            builder.Property(entity => entity.Status).HasConversion<string>();
             builder.HasIndex(entity => new { entity.TenantId, entity.WarehouseId, entity.UserId }).IsUnique();
             builder.HasOne<Tenant>()
                 .WithMany()

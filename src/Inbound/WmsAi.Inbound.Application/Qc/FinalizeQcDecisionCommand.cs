@@ -58,7 +58,7 @@ public sealed class FinalizeQcDecisionHandler(IBusinessDbContext businessDbConte
 
         try
         {
-            qcTask.Finalize(decision.Id, decision.DecisionStatus);
+            qcTask.Finalize(decision.Id, command.DecisionStatus);
         }
         catch (InvalidOperationException exception)
         {
@@ -89,7 +89,7 @@ public sealed class FinalizeQcDecisionHandler(IBusinessDbContext businessDbConte
             throw translated;
         }
 
-        return new FinalizeQcDecisionResult(decision.Id, qcTask.Status);
+        return new FinalizeQcDecisionResult(decision.Id, qcTask.Status.ToString());
     }
 }
 
@@ -107,7 +107,7 @@ public sealed class GetQcTasksHandler(IBusinessDbContext businessDbContext)
                 entity.Id,
                 entity.TaskNo,
                 entity.SkuCode,
-                entity.Status,
+                entity.Status.ToString(),
                 entity.QcDecisionId))
             .ToListAsync(cancellationToken);
     }

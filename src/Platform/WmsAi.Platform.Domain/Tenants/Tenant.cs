@@ -15,7 +15,7 @@ public sealed class Tenant : AggregateRoot
 
         Code = code.Trim();
         Name = name.Trim();
-        Status = "active";
+        Status = TenantStatus.Active;
 
         RaiseDomainEvent(new TenantCreatedEvent(Id, Code, Name));
     }
@@ -24,7 +24,7 @@ public sealed class Tenant : AggregateRoot
 
     public string Name { get; private set; } = string.Empty;
 
-    public string Status { get; private set; } = string.Empty;
+    public TenantStatus Status { get; private set; }
 
     public void Rename(string name)
     {

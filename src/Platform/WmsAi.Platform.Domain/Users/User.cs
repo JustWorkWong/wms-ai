@@ -12,12 +12,12 @@ public sealed class User : AggregateRoot
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(loginName);
         LoginName = loginName.Trim();
-        Status = "active";
+        Status = UserStatus.Active;
 
         RaiseDomainEvent(new UserCreatedEvent(Id, LoginName));
     }
 
     public string LoginName { get; private set; } = string.Empty;
 
-    public string Status { get; private set; } = string.Empty;
+    public UserStatus Status { get; private set; }
 }

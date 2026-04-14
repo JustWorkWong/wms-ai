@@ -23,7 +23,7 @@ public sealed class Receipt : WarehouseScopedAggregateRoot
 
         InboundNoticeId = inboundNoticeId;
         ReceiptNo = receiptNo.Trim();
-        Status = "received";
+        Status = ReceiptStatus.Created;
         ReceivedAt = DateTimeOffset.UtcNow;
 
         foreach (var line in lines)
@@ -43,7 +43,7 @@ public sealed class Receipt : WarehouseScopedAggregateRoot
 
     public string ReceiptNo { get; private set; } = string.Empty;
 
-    public string Status { get; private set; } = string.Empty;
+    public ReceiptStatus Status { get; private set; }
 
     public DateTimeOffset ReceivedAt { get; private set; }
 
@@ -51,7 +51,7 @@ public sealed class Receipt : WarehouseScopedAggregateRoot
 
     public void MarkQcCompleted()
     {
-        Status = "qc_completed";
+        Status = ReceiptStatus.QcCompleted;
     }
 }
 

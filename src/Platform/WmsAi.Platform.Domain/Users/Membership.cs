@@ -19,7 +19,7 @@ public sealed class Membership : AggregateRoot
         WarehouseId = warehouseId;
         UserId = userId;
         Role = role.Trim();
-        Status = "active";
+        Status = MembershipStatus.Active;
     }
 
     public Guid TenantId { get; private set; }
@@ -30,5 +30,5 @@ public sealed class Membership : AggregateRoot
 
     public string Role { get; private set; } = string.Empty;
 
-    public string Status { get; private set; } = string.Empty;
+    public MembershipStatus Status { get; private set; }
 }

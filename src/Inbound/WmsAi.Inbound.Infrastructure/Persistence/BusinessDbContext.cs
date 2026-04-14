@@ -32,7 +32,7 @@ public sealed class BusinessDbContext(DbContextOptions<BusinessDbContext> option
             builder.Property(entity => entity.TenantId).HasMaxLength(64);
             builder.Property(entity => entity.WarehouseId).HasMaxLength(64);
             builder.Property(entity => entity.NoticeNo).HasMaxLength(64);
-            builder.Property(entity => entity.Status).HasMaxLength(32);
+            builder.Property(entity => entity.Status).HasConversion<string>();
             builder.HasIndex(entity => new { entity.TenantId, entity.WarehouseId, entity.NoticeNo }).IsUnique();
             builder.OwnsMany(entity => entity.Lines, lines =>
             {
@@ -52,7 +52,7 @@ public sealed class BusinessDbContext(DbContextOptions<BusinessDbContext> option
             builder.Property(entity => entity.TenantId).HasMaxLength(64);
             builder.Property(entity => entity.WarehouseId).HasMaxLength(64);
             builder.Property(entity => entity.ReceiptNo).HasMaxLength(64);
-            builder.Property(entity => entity.Status).HasMaxLength(32);
+            builder.Property(entity => entity.Status).HasConversion<string>();
             builder.HasIndex(entity => new { entity.TenantId, entity.WarehouseId, entity.ReceiptNo }).IsUnique();
             builder.HasOne<InboundNotice>()
                 .WithMany()
@@ -77,7 +77,7 @@ public sealed class BusinessDbContext(DbContextOptions<BusinessDbContext> option
             builder.Property(entity => entity.WarehouseId).HasMaxLength(64);
             builder.Property(entity => entity.SkuCode).HasMaxLength(128);
             builder.Property(entity => entity.TaskNo).HasMaxLength(64);
-            builder.Property(entity => entity.Status).HasMaxLength(32);
+            builder.Property(entity => entity.Status).HasConversion<string>();
             builder.HasIndex(entity => new { entity.TenantId, entity.WarehouseId, entity.TaskNo }).IsUnique();
             builder.HasIndex(entity => new { entity.TenantId, entity.WarehouseId, entity.Status });
             builder.HasOne<InboundNotice>()
@@ -97,11 +97,11 @@ public sealed class BusinessDbContext(DbContextOptions<BusinessDbContext> option
             builder.HasKey(entity => entity.Id);
             builder.Property(entity => entity.TenantId).HasMaxLength(64);
             builder.Property(entity => entity.WarehouseId).HasMaxLength(64);
-            builder.Property(entity => entity.DecisionStatus).HasMaxLength(32);
+            builder.Property(entity => entity.DecisionResult).HasConversion<string>();
             builder.Property(entity => entity.DecisionSource).HasMaxLength(32);
             builder.Property(entity => entity.ReasonSummary).HasMaxLength(1024);
             builder.HasIndex(entity => entity.QcTaskId).IsUnique();
-            builder.HasIndex(entity => new { entity.TenantId, entity.WarehouseId, entity.DecisionStatus });
+            builder.HasIndex(entity => new { entity.TenantId, entity.WarehouseId, entity.DecisionResult });
             builder.HasOne<QcTask>()
                 .WithMany()
                 .HasForeignKey(entity => entity.QcTaskId)

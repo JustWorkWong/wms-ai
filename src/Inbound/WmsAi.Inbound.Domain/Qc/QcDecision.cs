@@ -23,7 +23,7 @@ public sealed class QcDecision : WarehouseScopedAggregateRoot
         ArgumentException.ThrowIfNullOrWhiteSpace(reasonSummary);
 
         QcTaskId = qcTaskId;
-        DecisionStatus = decisionStatus.Trim();
+        DecisionResult = ParseDecisionResult(decisionStatus);
         DecisionSource = decisionSource.Trim();
         ReasonSummary = reasonSummary.Trim();
         ReviewedAt = DateTimeOffset.UtcNow;
@@ -31,11 +31,22 @@ public sealed class QcDecision : WarehouseScopedAggregateRoot
 
     public Guid QcTaskId { get; private set; }
 
-    public string DecisionStatus { get; private set; } = string.Empty;
+    public QcDecisionResult DecisionResult { get; private set; }
 
     public string DecisionSource { get; private set; } = string.Empty;
 
     public DateTimeOffset ReviewedAt { get; private set; }
 
     public string ReasonSummary { get; private set; } = string.Empty;
+
+    private static QcDecisionResult ParseDecisionResult(string decisionStatus)
+    {
+        return decisionStatus.Trim().ToLowerInvariant() switch
+        {
+            "accepted" => QcDecisionResult.Accepted,
+            "rejected" => QcDecisionResult.Rejected,
+            "conditional" => QcDecisionResult.Conditional,
+            _ => throw new ArgumentException($"Invalid decision status: {decisionStatus}", nameof(decisionStatus))
+        };
+    }
 }
