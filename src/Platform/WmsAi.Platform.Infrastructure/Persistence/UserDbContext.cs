@@ -125,6 +125,10 @@ public static class PlatformModuleExtensions
         services.AddScoped<IPlatformUserDbContext>(serviceProvider => serviceProvider.GetRequiredService<UserDbContext>());
         services.AddScoped<CreateTenantHandler>();
 
+        services.AddScoped<WmsAi.Platform.Domain.Tenants.ITenantRepository, WmsAi.Platform.Infrastructure.Repositories.TenantRepository>();
+        services.AddScoped<WmsAi.Platform.Domain.Tenants.IWarehouseRepository, WmsAi.Platform.Infrastructure.Repositories.WarehouseRepository>();
+        services.AddScoped<WmsAi.Platform.Domain.Users.IUserRepository, WmsAi.Platform.Infrastructure.Repositories.UserRepository>();
+
         return services;
     }
 }

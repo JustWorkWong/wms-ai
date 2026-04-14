@@ -130,6 +130,11 @@ public static class InboundModuleExtensions
         services.AddScoped<FinalizeQcDecisionHandler>();
         services.AddScoped<GetQcTasksHandler>();
 
+        services.AddScoped<WmsAi.Inbound.Domain.Inbound.IInboundNoticeRepository, WmsAi.Inbound.Infrastructure.Repositories.InboundNoticeRepository>();
+        services.AddScoped<WmsAi.Inbound.Domain.Receipts.IReceiptRepository, WmsAi.Inbound.Infrastructure.Repositories.ReceiptRepository>();
+        services.AddScoped<WmsAi.Inbound.Domain.Qc.IQcTaskRepository, WmsAi.Inbound.Infrastructure.Repositories.QcTaskRepository>();
+        services.AddScoped<WmsAi.Inbound.Domain.Qc.IQcDecisionRepository, WmsAi.Inbound.Infrastructure.Repositories.QcDecisionRepository>();
+
         return services;
     }
 }
