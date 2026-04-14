@@ -21,7 +21,30 @@ public sealed class MafWorkflowRunRepository(AiDbContext context) : IMafWorkflow
 
     public async Task UpdateAsync(MafWorkflowRun workflowRun, CancellationToken cancellationToken = default)
     {
-        context.MafWorkflowRuns.Update(workflowRun);
+        var persistedStepRunIds = await context.MafWorkflowStepRuns
+            .AsNoTracking()
+            .Where(stepRun => stepRun.WorkflowRunId == workflowRun.Id)
+            .Select(stepRun => stepRun.Id)
+            .ToListAsync(cancellationToken);
+
+        var detachedStepRuns = workflowRun.StepRuns
+            .Where(stepRun => !persistedStepRunIds.Contains(stepRun.Id))
+            .ToList();
+        var workflowEntry = context.Entry(workflowRun);
+
+        if (detachedStepRuns.Count > 0)
+        {
+            context.ChangeTracker.Clear();
+            await context.MafWorkflowStepRuns.AddRangeAsync(detachedStepRuns, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
+            return;
+        }
+
+        if (workflowEntry.State == EntityState.Detached)
+        {
+            context.MafWorkflowRuns.Update(workflowRun);
+        }
+
         await context.SaveChangesAsync(cancellationToken);
     }
 

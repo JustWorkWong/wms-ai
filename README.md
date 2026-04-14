@@ -121,7 +121,7 @@ npm install
 npm run dev
 ```
 
-前端默认访问地址：`http://localhost:5173`
+前端默认访问地址：`http://localhost:3000`
 
 ### 常用访问地址
 
@@ -131,7 +131,7 @@ npm run dev
 - **Inbound**：`http://localhost:5002`
 - **AiGateway**：`http://localhost:5003`
 - **Operations**：`http://localhost:5004`
-- **前端**：`http://localhost:5173`
+- **前端**：`http://localhost:3000`
 - **RabbitMQ 管理后台**：`http://localhost:15672`（`wmsai/wmsai`）
 - **MinIO 控制台**：`http://localhost:9001`（`minioadmin/minioadmin`）
 - **Nacos 控制台**：`http://localhost:8848/nacos`（`nacos/nacos`）

@@ -28,7 +28,11 @@ public sealed class AiInspectionRunRepository(AiDbContext context) : IAiInspecti
 
     public async Task UpdateAsync(AiInspectionRun inspectionRun, CancellationToken cancellationToken = default)
     {
-        context.AiInspectionRuns.Update(inspectionRun);
+        if (context.Entry(inspectionRun).State == EntityState.Detached)
+        {
+            context.AiInspectionRuns.Update(inspectionRun);
+        }
+
         await context.SaveChangesAsync(cancellationToken);
     }
 

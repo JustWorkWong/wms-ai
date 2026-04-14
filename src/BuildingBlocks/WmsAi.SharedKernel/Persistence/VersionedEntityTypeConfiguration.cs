@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using System.Reflection;
 using WmsAi.SharedKernel.Domain;
 
 namespace WmsAi.SharedKernel.Persistence;
@@ -44,7 +45,16 @@ public sealed class VersionedEntitySaveChangesInterceptor : SaveChangesIntercept
         {
             if (entry.State == EntityState.Modified)
             {
-                entry.Property(nameof(AggregateRoot.Version)).CurrentValue = entry.Entity.Version + 1;
+                var versionProperty = entry.Property(nameof(AggregateRoot.Version));
+                var currentVersion = versionProperty.CurrentValue is long trackedVersion
+                    ? trackedVersion
+                    : entry.Entity.Version;
+                var nextVersion = currentVersion + 1;
+
+                versionProperty.CurrentValue = nextVersion;
+                entry.Entity.GetType()
+                    .GetProperty(nameof(AggregateRoot.Version), BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                    ?.SetValue(entry.Entity, nextVersion);
             }
         }
     }

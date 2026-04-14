@@ -29,3 +29,4 @@ public record ToolCallStartedEvent(string ToolName);
 public record ToolCallCompletedEvent(string ToolName, string Result);
 public record WorkflowCompletedEvent(double? Confidence);
 public record WorkflowFailedEvent(string ErrorMessage);
+public record SuperStepCompletedEvent(string StepName);

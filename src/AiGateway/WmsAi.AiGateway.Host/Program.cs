@@ -1,3 +1,4 @@
+using WmsAi.AiGateway.Host.Endpoints;
 using WmsAi.AiGateway.Host.Events;
 using WmsAi.AiGateway.Infrastructure;
 
@@ -46,6 +47,9 @@ app.MapDefaultEndpoints();
 
 // 映射控制器路由
 app.MapControllers();
+
+// 映射 Workflow 恢复 API
+app.MapWorkflowEndpoints();
 
 // 初始化数据库
 await AiGatewayDatabaseInitializer.InitializeAsync(app.Services);

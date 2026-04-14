@@ -26,6 +26,9 @@ public sealed class AiDbContext(DbContextOptions<AiDbContext> options) : DbConte
     public DbSet<AiModelProfile> AiModelProfiles => Set<AiModelProfile>();
     public DbSet<AiRoutingPolicy> AiRoutingPolicies => Set<AiRoutingPolicy>();
 
+    // Workflow Checkpoint Storage
+    public DbSet<WorkflowCheckpoint> WorkflowCheckpoints => Set<WorkflowCheckpoint>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ConfigureMafSessions(modelBuilder);
@@ -33,6 +36,7 @@ public sealed class AiDbContext(DbContextOptions<AiDbContext> options) : DbConte
         ConfigureInspections(modelBuilder);
         ConfigureModelConfig(modelBuilder);
         ConfigureAuditLogs(modelBuilder);
+        ConfigureWorkflowCheckpoints(modelBuilder);
     }
 
     private static void ConfigureMafSessions(ModelBuilder modelBuilder)
@@ -137,6 +141,10 @@ public sealed class AiDbContext(DbContextOptions<AiDbContext> options) : DbConte
             builder.HasIndex(e => new { e.TenantId, e.WarehouseId, e.Status });
             builder.HasIndex(e => new { e.WorkflowName, e.Status });
             builder.HasIndex(e => e.CreatedAt);
+            builder.Navigation(e => e.StepRuns)
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
+            builder.Metadata.FindNavigation(nameof(MafWorkflowRun.StepRuns))!
+                .SetField("_stepRuns");
             VersionedEntityTypeConfiguration.ApplyVersion(builder);
         });
 
@@ -315,6 +323,21 @@ public sealed class AiDbContext(DbContextOptions<AiDbContext> options) : DbConte
             builder.HasIndex(e => e.WorkflowRunId);
             builder.HasIndex(e => e.SessionId);
             builder.HasIndex(e => new { e.ProviderCode, e.ModelName });
+        });
+    }
+
+    private static void ConfigureWorkflowCheckpoints(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<WorkflowCheckpoint>(builder =>
+        {
+            builder.ToTable("workflow_checkpoints");
+            builder.HasKey(e => e.Id);
+            builder.Property(e => e.SessionId).HasMaxLength(128).IsRequired();
+            builder.Property(e => e.ParentCheckpointId).HasMaxLength(128);
+            builder.Property(e => e.CheckpointData).HasColumnType("jsonb").IsRequired();
+            builder.Property(e => e.CreatedAt).IsRequired();
+            builder.HasIndex(e => new { e.SessionId, e.CreatedAt });
+            builder.HasIndex(e => e.ParentCheckpointId);
         });
     }
 }

@@ -1,3 +1,5 @@
+using System.Text.Json;
+using Microsoft.Agents.AI.Workflows.Checkpointing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
@@ -17,6 +19,8 @@ using WmsAi.AiGateway.Infrastructure.Functions;
 using WmsAi.AiGateway.Infrastructure.Persistence;
 using WmsAi.AiGateway.Infrastructure.Repositories;
 using WmsAi.AiGateway.Infrastructure.Services;
+using WmsAi.AiGateway.Infrastructure.Workflows;
+using WmsAi.AiGateway.Infrastructure.Workflows.Executors;
 using WmsAi.SharedKernel.Persistence;
 
 namespace WmsAi.AiGateway.Infrastructure;
@@ -77,7 +81,8 @@ public static class AiGatewayModuleExtensions
             var rawClient = openAiClient.GetChatClient(modelName);
 
             // 包装中间件：OpenTelemetry + Logging
-            var chatClient = ((IChatClient)rawClient)
+            var chatClient = rawClient
+                .AsIChatClient()
                 .AsBuilder()
                 .UseOpenTelemetry(
                     sourceName: "WmsAi.AiGateway.AiModel",
@@ -118,6 +123,23 @@ public static class AiGatewayModuleExtensions
                 rabbitOptions.ExchangeName = "wmsai.events";
             });
         });
+
+        // 注册 MAF 服务
+        // Workflow Factory - 负责构建完整的质检工作流
+        services.AddScoped<QcInspectionWorkflowFactory>();
+
+        // Checkpoint Store - 持久化 Workflow 状态到 PostgreSQL
+        services.AddScoped<ICheckpointStore<JsonElement>, PostgresCheckpointStore>();
+
+        // Workflow Executors - 各个执行步骤
+        services.AddScoped<LoadQcTaskExecutor>();
+        services.AddScoped<LoadEvidenceExecutor>();
+        services.AddScoped<LoadRulesExecutor>();
+        services.AddScoped<EvidenceGapAgentExecutor>();
+        services.AddScoped<InspectionDecisionAgentExecutor>();
+        services.AddScoped<ConfidenceCheckExecutor>();
+        services.AddScoped<SaveResultExecutor>();
+        services.AddScoped<PublishEventExecutor>();
 
         return services;
     }

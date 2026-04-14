@@ -20,6 +20,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\BuildingBlocks\WmsAi.SharedKernel\WmsAi.SharedKernel.csproj" />
     <ProjectReference Include="..\..\src\BuildingBlocks\WmsAi.Contracts\WmsAi.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\AiGateway\WmsAi.AiGateway.Domain\WmsAi.AiGateway.Domain.csproj" />
+    <ProjectReference Include="..\..\src\AiGateway\WmsAi.AiGateway.Infrastructure\WmsAi.AiGateway.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
