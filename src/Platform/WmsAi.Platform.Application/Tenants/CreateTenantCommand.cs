@@ -16,7 +16,12 @@ public sealed record CreateTenantResult(
     string DefaultWarehouseCode,
     string AdminLoginName);
 
-public sealed class CreateTenantHandler(IPlatformUserDbContext userDbContext)
+public interface IEventPublisher
+{
+    Task PublishCollectedEventsAsync(CancellationToken cancellationToken = default);
+}
+
+public sealed class CreateTenantHandler(IPlatformUserDbContext userDbContext, IEventPublisher eventPublisher)
 {
     public async Task<CreateTenantResult> Handle(
         CreateTenantCommand command,
@@ -32,6 +37,8 @@ public sealed class CreateTenantHandler(IPlatformUserDbContext userDbContext)
         await userDbContext.AddUserAsync(user, cancellationToken);
         await userDbContext.AddMembershipAsync(membership, cancellationToken);
         await userDbContext.SaveChangesAsync(cancellationToken);
+
+        await eventPublisher.PublishCollectedEventsAsync(cancellationToken);
 
         return new CreateTenantResult(tenant.Code, warehouse.Code, user.LoginName);
     }

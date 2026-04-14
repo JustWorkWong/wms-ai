@@ -118,11 +118,18 @@ public static class InboundModuleExtensions
         var connectionString = configuration.GetConnectionString("BusinessDb")
             ?? "Host=localhost;Database=BusinessDb;Username=postgres;Password=postgres";
 
+        var rabbitMqConnection = configuration.GetConnectionString("RabbitMQ")
+            ?? "amqp://guest:guest@localhost:5672";
+
         services.AddSingleton<VersionedEntitySaveChangesInterceptor>();
+        services.AddSingleton<DomainEventDispatcher>();
+        services.AddSingleton<DomainEventInterceptor>();
+
         services.AddDbContext<BusinessDbContext>((serviceProvider, options) =>
         {
             options.UseNpgsql(connectionString);
             options.AddInterceptors(serviceProvider.GetRequiredService<VersionedEntitySaveChangesInterceptor>());
+            options.AddInterceptors(serviceProvider.GetRequiredService<DomainEventInterceptor>());
         });
         services.AddScoped<IBusinessDbContext>(serviceProvider => serviceProvider.GetRequiredService<BusinessDbContext>());
         services.AddScoped<CreateInboundNoticeHandler>();
@@ -134,6 +141,27 @@ public static class InboundModuleExtensions
         services.AddScoped<WmsAi.Inbound.Domain.Receipts.IReceiptRepository, WmsAi.Inbound.Infrastructure.Repositories.ReceiptRepository>();
         services.AddScoped<WmsAi.Inbound.Domain.Qc.IQcTaskRepository, WmsAi.Inbound.Infrastructure.Repositories.QcTaskRepository>();
         services.AddScoped<WmsAi.Inbound.Domain.Qc.IQcDecisionRepository, WmsAi.Inbound.Infrastructure.Repositories.QcDecisionRepository>();
+
+        services.AddCap(options =>
+        {
+            options.UseEntityFramework<BusinessDbContext>();
+            options.UseRabbitMQ(rabbitOptions =>
+            {
+                rabbitOptions.ConnectionFactoryOptions = factory =>
+                {
+                    factory.Uri = new Uri(rabbitMqConnection);
+                };
+                rabbitOptions.ExchangeName = "wmsai.events";
+            });
+        });
+
+        services.AddScoped<WmsAi.Inbound.Infrastructure.Events.CapEventPublisher>();
+        services.AddScoped<WmsAi.Inbound.Application.Receipts.IEventPublisher>(sp =>
+            sp.GetRequiredService<WmsAi.Inbound.Infrastructure.Events.CapEventPublisher>());
+        services.AddScoped<WmsAi.Inbound.Application.Qc.IEventPublisher>(sp =>
+            sp.GetRequiredService<WmsAi.Inbound.Infrastructure.Events.CapEventPublisher>());
+
+        services.AddScoped<WmsAi.Inbound.Infrastructure.Events.PlatformEventConsumer>();
 
         return services;
     }

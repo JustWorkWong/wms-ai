@@ -22,7 +22,12 @@ public sealed record QcTaskSummary(
     string Status,
     Guid? QcDecisionId);
 
-public sealed class FinalizeQcDecisionHandler(IBusinessDbContext businessDbContext)
+public interface IEventPublisher
+{
+    Task PublishCollectedEventsAsync(CancellationToken cancellationToken = default);
+}
+
+public sealed class FinalizeQcDecisionHandler(IBusinessDbContext businessDbContext, IEventPublisher eventPublisher)
 {
     public async Task<FinalizeQcDecisionResult> Handle(
         FinalizeQcDecisionCommand command,
@@ -88,6 +93,8 @@ public sealed class FinalizeQcDecisionHandler(IBusinessDbContext businessDbConte
         {
             throw translated;
         }
+
+        await eventPublisher.PublishCollectedEventsAsync(cancellationToken);
 
         return new FinalizeQcDecisionResult(decision.Id, qcTask.Status.ToString());
     }

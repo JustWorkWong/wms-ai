@@ -116,11 +116,18 @@ public static class PlatformModuleExtensions
         var connectionString = configuration.GetConnectionString("UserDb")
             ?? "Host=localhost;Database=UserDb;Username=postgres;Password=postgres";
 
+        var rabbitMqConnection = configuration.GetConnectionString("RabbitMQ")
+            ?? "amqp://guest:guest@localhost:5672";
+
         services.AddSingleton<VersionedEntitySaveChangesInterceptor>();
+        services.AddSingleton<DomainEventDispatcher>();
+        services.AddSingleton<DomainEventInterceptor>();
+
         services.AddDbContext<UserDbContext>((serviceProvider, options) =>
         {
             options.UseNpgsql(connectionString);
             options.AddInterceptors(serviceProvider.GetRequiredService<VersionedEntitySaveChangesInterceptor>());
+            options.AddInterceptors(serviceProvider.GetRequiredService<DomainEventInterceptor>());
         });
         services.AddScoped<IPlatformUserDbContext>(serviceProvider => serviceProvider.GetRequiredService<UserDbContext>());
         services.AddScoped<CreateTenantHandler>();
@@ -128,6 +135,23 @@ public static class PlatformModuleExtensions
         services.AddScoped<WmsAi.Platform.Domain.Tenants.ITenantRepository, WmsAi.Platform.Infrastructure.Repositories.TenantRepository>();
         services.AddScoped<WmsAi.Platform.Domain.Tenants.IWarehouseRepository, WmsAi.Platform.Infrastructure.Repositories.WarehouseRepository>();
         services.AddScoped<WmsAi.Platform.Domain.Users.IUserRepository, WmsAi.Platform.Infrastructure.Repositories.UserRepository>();
+
+        services.AddCap(options =>
+        {
+            options.UseEntityFramework<UserDbContext>();
+            options.UseRabbitMQ(rabbitOptions =>
+            {
+                rabbitOptions.ConnectionFactoryOptions = factory =>
+                {
+                    factory.Uri = new Uri(rabbitMqConnection);
+                };
+                rabbitOptions.ExchangeName = "wmsai.events";
+            });
+        });
+
+        services.AddScoped<WmsAi.Platform.Infrastructure.Events.CapEventPublisher>();
+        services.AddScoped<WmsAi.Platform.Application.Tenants.IEventPublisher>(sp =>
+            sp.GetRequiredService<WmsAi.Platform.Infrastructure.Events.CapEventPublisher>());
 
         return services;
     }

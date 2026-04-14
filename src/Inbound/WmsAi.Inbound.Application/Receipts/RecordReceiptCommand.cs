@@ -15,7 +15,12 @@ public sealed record RecordReceiptCommand(
 
 public sealed record RecordReceiptResult(Guid ReceiptId, int QcTaskCount);
 
-public sealed class RecordReceiptHandler(IBusinessDbContext businessDbContext)
+public interface IEventPublisher
+{
+    Task PublishCollectedEventsAsync(CancellationToken cancellationToken = default);
+}
+
+public sealed class RecordReceiptHandler(IBusinessDbContext businessDbContext, IEventPublisher eventPublisher)
 {
     public async Task<RecordReceiptResult> Handle(
         RecordReceiptCommand command,
@@ -83,6 +88,8 @@ public sealed class RecordReceiptHandler(IBusinessDbContext businessDbContext)
         {
             throw translated;
         }
+
+        await eventPublisher.PublishCollectedEventsAsync(cancellationToken);
 
         return new RecordReceiptResult(receipt.Id, index);
     }

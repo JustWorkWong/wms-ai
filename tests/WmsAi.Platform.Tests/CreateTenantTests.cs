@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using WmsAi.Platform.Application.Tenants;
 using WmsAi.Platform.Domain.Tenants;
 using WmsAi.Platform.Infrastructure.Persistence;
+using WmsAi.Platform.Tests.Mocks;
 using WmsAi.SharedKernel.Persistence;
 using Xunit;
 
@@ -26,7 +27,7 @@ public class CreateTenantTests
         await using var dbContext = new UserDbContext(options);
         await dbContext.Database.EnsureCreatedAsync();
 
-        var handler = new CreateTenantHandler(dbContext);
+        var handler = new CreateTenantHandler(dbContext, new MockEventPublisher());
 
         var result = await handler.Handle(new CreateTenantCommand(
             "TENANT_DEMO",

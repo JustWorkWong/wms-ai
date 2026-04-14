@@ -11,6 +11,7 @@ using WmsAi.Inbound.Domain.Inbound;
 using WmsAi.Inbound.Domain.Receipts;
 using WmsAi.Inbound.Host;
 using WmsAi.Inbound.Infrastructure.Persistence;
+using WmsAi.Inbound.Tests.Mocks;
 using Xunit;
 
 namespace WmsAi.Inbound.Tests;
@@ -37,7 +38,7 @@ public class RecordReceiptTests
             "ASN_DEMO_001",
             [new InboundNoticeLineInput("sku-001", 100m)]));
 
-        var handler = new RecordReceiptHandler(dbContext);
+        var handler = new RecordReceiptHandler(dbContext, new MockEventPublisher());
 
         var result = await handler.Handle(new RecordReceiptCommand(
             "tenant-demo",
@@ -70,7 +71,7 @@ public class RecordReceiptTests
             "ASN_DEMO_002",
             [new InboundNoticeLineInput("sku-001", 20m)]));
 
-        var recordReceiptHandler = new RecordReceiptHandler(dbContext);
+        var recordReceiptHandler = new RecordReceiptHandler(dbContext, new MockEventPublisher());
         await recordReceiptHandler.Handle(new RecordReceiptCommand(
             "tenant-demo",
             "wh-sz-01",
@@ -79,7 +80,7 @@ public class RecordReceiptTests
             [new ReceiptLineInput("sku-001", 20m)]));
 
         var qcTask = await dbContext.QcTasks.SingleAsync();
-        var finalizeHandler = new FinalizeQcDecisionHandler(dbContext);
+        var finalizeHandler = new FinalizeQcDecisionHandler(dbContext, new MockEventPublisher());
 
         await finalizeHandler.Handle(new FinalizeQcDecisionCommand(
             "tenant-demo",
@@ -141,7 +142,7 @@ public class RecordReceiptTests
             "ASN_DEMO_003",
             [new InboundNoticeLineInput("sku-001", 10m)]));
 
-        var handler = new RecordReceiptHandler(dbContext);
+        var handler = new RecordReceiptHandler(dbContext, new MockEventPublisher());
         var act = async () => await handler.Handle(new RecordReceiptCommand(
             "tenant-demo",
             "wh-sz-01",
