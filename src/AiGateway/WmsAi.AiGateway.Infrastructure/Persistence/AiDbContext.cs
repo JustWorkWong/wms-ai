@@ -195,17 +195,14 @@ public sealed class AiDbContext(DbContextOptions<AiDbContext> options) : DbConte
         {
             builder.ToTable("ai_suggestions");
             builder.HasKey(e => e.Id);
-            builder.Property(e => e.InspectionRunId).IsRequired();
-            builder.Property(e => e.SuggestionType).HasConversion<string>().HasMaxLength(32);
+            builder.Property(e => e.TenantId).HasMaxLength(64).IsRequired();
+            builder.Property(e => e.WarehouseId).HasMaxLength(64).IsRequired();
+            builder.Property(e => e.QcTaskId).IsRequired();
+            builder.Property(e => e.SuggestionType).HasMaxLength(64).IsRequired();
             builder.Property(e => e.Reasoning).HasColumnType("text").IsRequired();
-            builder.Property(e => e.ConfidenceScore).HasPrecision(5, 4).IsRequired();
-            builder.Property(e => e.StructuredDataJson).HasColumnType("jsonb");
+            builder.Property(e => e.Confidence).IsRequired();
             builder.Property(e => e.CreatedAt).IsRequired();
-            builder.HasIndex(e => e.InspectionRunId);
-            builder.HasOne<AiInspectionRun>()
-                .WithMany(i => i.Suggestions)
-                .HasForeignKey(e => e.InspectionRunId)
-                .OnDelete(DeleteBehavior.Cascade);
+            builder.HasIndex(e => new { e.TenantId, e.QcTaskId });
         });
     }
 

@@ -78,16 +78,8 @@ public sealed class AiInspectionRun : WarehouseScopedAggregateRoot
         decimal confidenceScore,
         string? structuredDataJson)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(reasoning);
-
-        var suggestion = new AiSuggestion(
-            Id,
-            suggestionType,
-            reasoning,
-            confidenceScore,
-            structuredDataJson);
-
-        _suggestions.Add(suggestion);
+        // This method is kept for backward compatibility but is no longer used
+        // Suggestions are now created directly via the repository
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 
@@ -108,7 +100,24 @@ public sealed class AiInspectionRun : WarehouseScopedAggregateRoot
 
     public void EscalateToManualReview()
     {
-        Status = InspectionStatus.ManualReview;
+        Status = InspectionStatus.WaitingManualReview;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void CompleteManualReview(string decision, string reasoning, string reviewerId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(decision);
+        ArgumentException.ThrowIfNullOrWhiteSpace(reasoning);
+        ArgumentException.ThrowIfNullOrWhiteSpace(reviewerId);
+
+        if (Status != InspectionStatus.WaitingManualReview)
+        {
+            throw new InvalidOperationException("Can only complete manual review when waiting for review");
+        }
+
+        ResultSummary = $"Manual Review: {decision} - {reasoning} (Reviewer: {reviewerId})";
+        Status = InspectionStatus.Completed;
+        CompletedAt = DateTimeOffset.UtcNow;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 }

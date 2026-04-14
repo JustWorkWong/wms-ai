@@ -6,5 +6,5 @@ public enum InspectionStatus
     Running,
     Completed,
     Failed,
-    ManualReview
+    WaitingManualReview
 }

@@ -2,12 +2,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using WmsAi.AiGateway.Application.Agents;
+using WmsAi.AiGateway.Application.Functions;
 using WmsAi.AiGateway.Application.Services;
 using WmsAi.AiGateway.Domain.Inspections;
 using WmsAi.AiGateway.Domain.MafSessions;
 using WmsAi.AiGateway.Domain.ModelConfig;
 using WmsAi.AiGateway.Domain.Workflows;
 using WmsAi.AiGateway.Infrastructure.Agents;
+using WmsAi.AiGateway.Infrastructure.Functions;
 using WmsAi.AiGateway.Infrastructure.Persistence;
 using WmsAi.AiGateway.Infrastructure.Repositories;
 using WmsAi.AiGateway.Infrastructure.Services;
@@ -46,10 +48,21 @@ public static class AiGatewayModuleExtensions
         // Register services
         services.AddScoped<IMafPersistenceService, MafPersistenceService>();
         services.AddScoped<IModelRoutingService, ModelRoutingService>();
+        services.AddScoped<IAgUiEventStreamService, AgUiEventStreamService>();
+        services.AddScoped<IAgUiEventTransformer, AgUiEventTransformer>();
 
         // Register agents
         services.AddScoped<IEvidenceGapAgent, EvidenceGapAgent>();
         services.AddScoped<IInspectionDecisionAgent, InspectionDecisionAgent>();
+
+        // Register business functions
+        services.AddScoped<IInboundBusinessFunctions, InboundBusinessFunctions>();
+        services.AddHttpClient<IBusinessApiClient, BusinessApiClient>((serviceProvider, client) =>
+        {
+            var inboundBaseUrl = configuration["Services:Inbound:BaseUrl"] ?? "http://localhost:5002";
+            client.BaseAddress = new Uri(inboundBaseUrl);
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
 
         // Configure CAP for event bus
         services.AddCap(options =>

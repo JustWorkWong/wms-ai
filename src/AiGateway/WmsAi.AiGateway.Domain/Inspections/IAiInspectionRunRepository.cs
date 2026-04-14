@@ -11,4 +11,6 @@ public interface IAiInspectionRunRepository
     Task UpdateAsync(AiInspectionRun inspectionRun, CancellationToken cancellationToken = default);
 
     Task<List<AiInspectionRun>> GetByStatusAsync(string tenantId, InspectionStatus status, CancellationToken cancellationToken = default);
+
+    Task AddSuggestionAsync(AiSuggestion suggestion, CancellationToken cancellationToken = default);
 }

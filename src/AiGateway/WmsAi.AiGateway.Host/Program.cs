@@ -10,10 +10,19 @@ builder.Services.AddAiGatewayModule(builder.Configuration);
 
 builder.Services.AddScoped<InboundEventConsumer>();
 
+// Add controllers
+builder.Services.AddControllers();
+
+// Add HttpContextAccessor for BusinessApiClient
+builder.Services.AddHttpContextAccessor();
+
 var app = builder.Build();
 
 app.MapGet("/", () => Results.Ok());
 app.MapDefaultEndpoints();
+
+// Map controllers
+app.MapControllers();
 
 // Placeholder API endpoints for inspection workflow
 app.MapPost("/api/ai/inspections/start", async (StartInspectionRequest request) =>
@@ -41,3 +50,4 @@ app.Run();
 
 public record StartInspectionRequest(Guid QcTaskId, string TenantId, string WarehouseId, string UserId);
 public record ResumeInspectionRequest(string Decision, string Reasoning);
+

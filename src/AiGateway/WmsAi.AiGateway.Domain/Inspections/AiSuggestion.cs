@@ -7,37 +7,44 @@ public sealed class AiSuggestion
     }
 
     public AiSuggestion(
-        Guid inspectionRunId,
-        SuggestionType suggestionType,
-        string reasoning,
-        decimal confidenceScore,
-        string? structuredDataJson)
+        string tenantId,
+        string warehouseId,
+        Guid qcTaskId,
+        string suggestionType,
+        double confidence,
+        string reasoning)
     {
-        ArgumentOutOfRangeException.ThrowIfEqual(inspectionRunId, Guid.Empty);
+        ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(warehouseId);
+        ArgumentOutOfRangeException.ThrowIfEqual(qcTaskId, Guid.Empty);
+        ArgumentException.ThrowIfNullOrWhiteSpace(suggestionType);
         ArgumentException.ThrowIfNullOrWhiteSpace(reasoning);
-        ArgumentOutOfRangeException.ThrowIfNegative(confidenceScore);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(confidenceScore, 1.0m);
+        ArgumentOutOfRangeException.ThrowIfNegative(confidence);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(confidence, 1.0);
 
         Id = Guid.NewGuid();
-        InspectionRunId = inspectionRunId;
-        SuggestionType = suggestionType;
+        TenantId = tenantId.Trim();
+        WarehouseId = warehouseId.Trim();
+        QcTaskId = qcTaskId;
+        SuggestionType = suggestionType.Trim();
+        Confidence = confidence;
         Reasoning = reasoning.Trim();
-        ConfidenceScore = confidenceScore;
-        StructuredDataJson = structuredDataJson?.Trim();
         CreatedAt = DateTimeOffset.UtcNow;
     }
 
     public Guid Id { get; private set; }
 
-    public Guid InspectionRunId { get; private set; }
+    public string TenantId { get; private set; } = string.Empty;
 
-    public SuggestionType SuggestionType { get; private set; }
+    public string WarehouseId { get; private set; } = string.Empty;
+
+    public Guid QcTaskId { get; private set; }
+
+    public string SuggestionType { get; private set; } = string.Empty;
 
     public string Reasoning { get; private set; } = string.Empty;
 
-    public decimal ConfidenceScore { get; private set; }
-
-    public string? StructuredDataJson { get; private set; }
+    public double Confidence { get; private set; }
 
     public DateTimeOffset CreatedAt { get; private set; }
 }

@@ -42,4 +42,10 @@ public sealed class AiInspectionRunRepository(AiDbContext context) : IAiInspecti
             .OrderByDescending(i => i.CreatedAt)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task AddSuggestionAsync(AiSuggestion suggestion, CancellationToken cancellationToken = default)
+    {
+        await context.AiSuggestions.AddAsync(suggestion, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
+    }
 }
